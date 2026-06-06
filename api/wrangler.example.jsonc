@@ -23,7 +23,7 @@
   // ],
   "d1_databases": [
     {
-      "binding": "MY_DB",
+      "binding": "DB",
       "database_name": "my-database",
       "database_id": ""
     }
