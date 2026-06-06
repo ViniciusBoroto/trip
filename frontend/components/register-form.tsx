@@ -15,6 +15,7 @@ import {
 import { ApiClientError, getPublicApiBaseUrl } from "@/lib/api/client";
 import { useAuth } from "@/components/auth-provider";
 import type { RegisterRequest } from "@/types/auth";
+import { AuthInput, AuthButton, AuthStatus } from "@/components/auth-layout";
 
 type FormStatus = {
   kind: "idle" | "loading" | "error" | "success";
@@ -89,78 +90,56 @@ export function RegisterForm() {
 
   return (
     <>
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label htmlFor="name" className="form-label">
-            Name
-          </label>
-          <div className="input-icon">
-            <span className="input-icon-addon" aria-hidden="true">
-              <IconUser size={18} stroke={1.8} />
-            </span>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              className="form-control"
-              placeholder="Your name"
-              autoComplete="name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              disabled={status.kind === "loading"}
-            />
-          </div>
-        </div>
+      <form onSubmit={handleSubmit}>
+        <AuthInput
+          id="name"
+          name="name"
+          type="text"
+          label="Name"
+          placeholder="Your name"
+          autoComplete="name"
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          disabled={status.kind === "loading"}
+          icon={IconUser}
+        />
 
-        <div className="mb-3">
-          <label htmlFor="email" className="form-label">
-            Email
-          </label>
-          <div className="input-icon">
-            <span className="input-icon-addon" aria-hidden="true">
-              <IconMail size={18} stroke={1.8} />
-            </span>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              className="form-control"
-              placeholder="you@example.com"
-              autoComplete="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={status.kind === "loading"}
-            />
-          </div>
-        </div>
+        <AuthInput
+          id="email"
+          name="email"
+          type="email"
+          label="Email"
+          placeholder="you@example.com"
+          autoComplete="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          disabled={status.kind === "loading"}
+          icon={IconMail}
+        />
 
-        <div className="mb-2">
-          <div className="d-flex align-items-center justify-content-between gap-3 mb-2">
-            <label htmlFor="password" className="form-label mb-0">
-              Password
-            </label>
-            <Link href="/login" className="auth-inline-link">
+        <AuthInput
+          id="password"
+          name="password"
+          type={showPassword ? "text" : "password"}
+          label="Password"
+          labelRight={
+            <Link
+              href="/login"
+              className="text-[oklch(0.47_0.08_250)] font-semibold no-underline hover:text-[oklch(0.42_0.09_250)] text-sm"
+            >
               Already have an account?
             </Link>
-          </div>
-          <div className="input-icon">
-            <span className="input-icon-addon" aria-hidden="true">
-              <IconLock size={18} stroke={1.8} />
-            </span>
-            <input
-              id="password"
-              name="password"
-              type={showPassword ? "text" : "password"}
-              className="form-control"
-              placeholder="Create a password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              disabled={status.kind === "loading"}
-            />
+          }
+          placeholder="Create a password"
+          autoComplete="new-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          disabled={status.kind === "loading"}
+          icon={IconLock}
+          suffix={
             <button
               type="button"
-              className="input-icon-addon border-0"
+              className="input-icon-addon border-0 text-[oklch(0.45_0.02_245)]"
               style={{ pointerEvents: "auto", cursor: "pointer" }}
               aria-label={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword((prev) => !prev)}
@@ -168,8 +147,8 @@ export function RegisterForm() {
             >
               {showPassword ? <IconEyeOff size={18} stroke={1.8} /> : <IconEye size={18} stroke={1.8} />}
             </button>
-          </div>
-        </div>
+          }
+        />
 
         <label className="form-check mt-3 mb-4">
           <input
@@ -182,23 +161,13 @@ export function RegisterForm() {
           <span className="form-check-label">Keep me signed in on this device</span>
         </label>
 
-        <button
-          type="submit"
-          className="btn btn-primary w-100 auth-submit"
-          disabled={status.kind === "loading"}
-        >
+        <AuthButton disabled={status.kind === "loading"}>
           <span>{status.kind === "loading" ? "Sending..." : "Create account"}</span>
           <IconArrowRight size={18} stroke={2} />
-        </button>
+        </AuthButton>
       </form>
 
-      <div
-        className={`auth-status auth-status-${status.kind}`}
-        role="status"
-        aria-live="polite"
-      >
-        {status.message}
-      </div>
+      <AuthStatus kind={status.kind} message={status.message} />
     </>
   );
 }
