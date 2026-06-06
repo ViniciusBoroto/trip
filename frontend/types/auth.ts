@@ -4,6 +4,13 @@ export type LoginRequest = {
   remember: boolean;
 };
 
+export type RegisterRequest = {
+  name: string;
+  email: string;
+  password: string;
+  remember: boolean;
+};
+
 export type AuthUser = {
   id: string;
   email: string;
@@ -24,6 +31,7 @@ export type AuthErrorResponse = {
 };
 
 export type LoginResponse = AuthSuccessResponse | AuthErrorResponse;
+export type RegisterResponse = AuthSuccessResponse | AuthErrorResponse;
 export type RefreshResponse = AuthSuccessResponse | AuthErrorResponse;
 export type LogoutResponse = {
   ok: boolean;

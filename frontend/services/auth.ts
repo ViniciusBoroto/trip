@@ -5,7 +5,16 @@ import type {
   LogoutResponse,
   MeResponse,
   RefreshResponse,
+  RegisterRequest,
+  RegisterResponse,
 } from "@/types/auth";
+
+export async function register(payload: RegisterRequest) {
+  return apiRequest<RegisterResponse>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
 
 export async function login(payload: LoginRequest) {
   return apiRequest<LoginResponse>("/auth/login", {

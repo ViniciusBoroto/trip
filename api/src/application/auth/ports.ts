@@ -13,6 +13,14 @@ export type CreateRefreshTokenInput = {
 export interface UserRepository {
   findByEmail(email: string): Promise<AuthUser | null>
   findById(id: string): Promise<AuthUser | null>
+  create(input: {
+    id: string
+    email: string
+    name: string
+    passwordHash: string
+    isActive: boolean
+    createdAt: string
+  }): Promise<AuthUser>
 }
 
 export interface RefreshTokenRepository {
@@ -23,6 +31,7 @@ export interface RefreshTokenRepository {
 }
 
 export interface PasswordHasher {
+  hash(password: string): Promise<string>
   verify(password: string, passwordHash: string): Promise<boolean>
 }
 

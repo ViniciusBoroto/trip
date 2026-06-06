@@ -23,6 +23,34 @@ export class D1UserRepository implements UserRepository {
 
     return result ? mapUser(result) : null
   }
+
+  async create(input: {
+    id: string
+    email: string
+    name: string
+    passwordHash: string
+    isActive: boolean
+    createdAt: string
+  }): Promise<AuthUser> {
+    const normalizedEmail = input.email.trim().toLowerCase()
+
+    await this.db.insert(usersTable).values({
+      id: input.id,
+      email: normalizedEmail,
+      name: input.name,
+      passwordHash: input.passwordHash,
+      isActive: input.isActive,
+      createdAt: input.createdAt,
+    })
+
+    return {
+      id: input.id,
+      email: normalizedEmail,
+      name: input.name,
+      passwordHash: input.passwordHash,
+      isActive: input.isActive,
+    }
+  }
 }
 
 function mapUser(row: typeof usersTable.$inferSelect): AuthUser {

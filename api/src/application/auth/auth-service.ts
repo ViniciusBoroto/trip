@@ -1,9 +1,11 @@
 import {
+  EmailAlreadyTakenError,
   InactiveUserError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
 } from '../../domain/auth/errors'
-import type { AccessTokenClaims, PublicAuthUser } from '../../domain/auth/types'
+import type { AccessTokenClaims, AuthUser, PublicAuthUser } from '../../domain/auth/types'
+import { parseLoginInput, parseRegisterInput } from './auth-input'
 import type {
   PasswordHasher,
   RefreshTokenRepository,
@@ -21,9 +23,39 @@ type Dependencies = {
 export class AuthService {
   constructor(private readonly deps: Dependencies) {}
 
-  async login(email: string, password: string, remember: boolean) {
-    const normalizedEmail = email.trim().toLowerCase()
-    const user = await this.deps.users.findByEmail(normalizedEmail)
+  async register(input: unknown) {
+    const { name, email, password, remember } = parseRegisterInput(input)
+    const existingUser = await this.deps.users.findByEmail(email)
+
+    if (existingUser) {
+      throw new EmailAlreadyTakenError()
+    }
+
+    const passwordHash = await this.deps.passwordHasher.hash(password)
+
+    try {
+      const user = await this.deps.users.create({
+        id: crypto.randomUUID(),
+        email,
+        name,
+        passwordHash,
+        isActive: true,
+        createdAt: this.deps.tokenService.now().toISOString(),
+      })
+
+      return this.createSession(user, remember)
+    } catch (error) {
+      if (isDuplicateEmailError(error)) {
+        throw new EmailAlreadyTakenError()
+      }
+
+      throw error
+    }
+  }
+
+  async login(input: unknown) {
+    const { email, password, remember } = parseLoginInput(input)
+    const user = await this.deps.users.findByEmail(email)
 
     if (!user) {
       throw new InvalidCredentialsError()
@@ -39,22 +71,7 @@ export class AuthService {
       throw new InvalidCredentialsError()
     }
 
-    const session = await this.deps.tokenService.issueSession(user, remember)
-    const tokenHash = await this.deps.tokenService.fingerprintToken(session.refreshToken)
-
-    await this.deps.refreshTokens.create({
-      id: this.deps.tokenService.generateRefreshTokenId(),
-      userId: user.id,
-      tokenHash,
-      expiresAt: session.refreshTokenExpiresAt,
-      createdAt: this.deps.tokenService.now().toISOString(),
-      remember,
-    })
-
-    return {
-      user: toPublicUser(user.id, user.email, user.name),
-      ...session,
-    }
+    return this.createSession(user, remember)
   }
 
   async refresh(refreshToken: string) {
@@ -131,8 +148,35 @@ export class AuthService {
 
     return toPublicUser(user.id, user.email, user.name)
   }
+
+  private async createSession(user: AuthUser, remember: boolean) {
+    const session = await this.deps.tokenService.issueSession(user, remember)
+    const tokenHash = await this.deps.tokenService.fingerprintToken(session.refreshToken)
+
+    await this.deps.refreshTokens.create({
+      id: this.deps.tokenService.generateRefreshTokenId(),
+      userId: user.id,
+      tokenHash,
+      expiresAt: session.refreshTokenExpiresAt,
+      createdAt: this.deps.tokenService.now().toISOString(),
+      remember,
+    })
+
+    return {
+      user: toPublicUser(user.id, user.email, user.name),
+      ...session,
+    }
+  }
 }
 
 function toPublicUser(id: string, email: string, name: string): PublicAuthUser {
   return { id, email, name }
+}
+
+function isDuplicateEmailError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  return /unique/i.test(error.message) && /users\.email|email/i.test(error.message)
 }

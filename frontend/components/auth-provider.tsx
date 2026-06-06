@@ -9,8 +9,13 @@ import {
   refreshAccessToken,
   writeAccessToken,
 } from "@/lib/auth/session";
-import { getCurrentUser, login as loginRequest, logout as logoutRequest } from "@/services/auth";
-import type { AuthUser, LoginRequest, MeResponse } from "@/types/auth";
+import {
+  getCurrentUser,
+  login as loginRequest,
+  logout as logoutRequest,
+  register as registerRequest,
+} from "@/services/auth";
+import type { AuthUser, LoginRequest, MeResponse, RegisterRequest } from "@/types/auth";
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
 
@@ -18,6 +23,7 @@ type AuthContextValue = {
   status: AuthStatus;
   user: AuthUser | null;
   login: (payload: LoginRequest) => Promise<AuthUser>;
+  register: (payload: RegisterRequest) => Promise<AuthUser>;
   logout: () => Promise<void>;
   authenticatedRequest: <T>(path: string, options?: Parameters<typeof runAuthenticatedRequest>[1]) => Promise<T | null>;
 };
@@ -65,6 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  function completeAuthentication(accessToken: string, user: AuthUser) {
+    writeAccessToken(accessToken);
+    setUser(user);
+    setStatus("authenticated");
+    return user;
+  }
+
   async function login(payload: LoginRequest) {
     const response = await loginRequest(payload);
 
@@ -72,10 +85,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new ApiClientError(response?.message || "Authentication failed.", 401, response);
     }
 
-    writeAccessToken(response.accessToken);
-    setUser(response.user);
-    setStatus("authenticated");
-    return response.user;
+    return completeAuthentication(response.accessToken, response.user);
+  }
+
+  async function register(payload: RegisterRequest) {
+    const response = await registerRequest(payload);
+
+    if (!response?.ok || !response.accessToken) {
+      throw new ApiClientError(response?.message || "Account creation failed.", 400, response);
+    }
+
+    return completeAuthentication(response.accessToken, response.user);
   }
 
   async function logout() {
@@ -121,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         status,
         user,
         login,
+        register,
         logout,
         authenticatedRequest,
       }}

@@ -5,6 +5,20 @@ export class InvalidCredentialsError extends Error {
   }
 }
 
+export class InvalidAuthInputError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'InvalidAuthInputError'
+  }
+}
+
+export class EmailAlreadyTakenError extends Error {
+  constructor() {
+    super('An account with this email already exists.')
+    this.name = 'EmailAlreadyTakenError'
+  }
+}
+
 export class InactiveUserError extends Error {
   constructor() {
     super('User account is inactive.')

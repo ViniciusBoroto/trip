@@ -1,8 +1,33 @@
 import type { PasswordHasher } from '../../application/auth/ports'
 
 const encoder = new TextEncoder()
+const HASH_ITERATIONS = 600_000
 
 export class Pbkdf2PasswordHasher implements PasswordHasher {
+  async hash(password: string): Promise<string> {
+    const salt = toHex(crypto.getRandomValues(new Uint8Array(16)))
+    const keyMaterial = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(password),
+      'PBKDF2',
+      false,
+      ['deriveBits'],
+    )
+
+    const derivedBits = await crypto.subtle.deriveBits(
+      {
+        name: 'PBKDF2',
+        hash: 'SHA-256',
+        salt: encoder.encode(salt),
+        iterations: HASH_ITERATIONS,
+      },
+      keyMaterial,
+      256,
+    )
+
+    return `pbkdf2_sha256$${HASH_ITERATIONS}$${salt}$${toHex(new Uint8Array(derivedBits))}`
+  }
+
   async verify(password: string, passwordHash: string): Promise<boolean> {
     const [algorithm, iterationsRaw, salt, expectedHash] = passwordHash.split('$')
 

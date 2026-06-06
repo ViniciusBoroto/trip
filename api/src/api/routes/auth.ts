@@ -5,7 +5,9 @@ import type { AuthService } from '../../application/auth/auth-service'
 import type { AppBindings } from '../../di/bindings'
 import {
   AuthConfigurationError,
+  EmailAlreadyTakenError,
   InactiveUserError,
+  InvalidAuthInputError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
   UnauthorizedError,
@@ -13,27 +15,36 @@ import {
 import { clearRefreshToken, readRefreshToken, writeRefreshToken } from '../cookies'
 import { createAuthMiddleware, type AuthenticatedAppEnv } from '../middleware'
 
-type LoginBody = {
-  email?: unknown
-  password?: unknown
-  remember?: unknown
-}
-
 export function createAuthRoutes(getAuthService: (bindings: AppBindings) => AuthService) {
   const auth = new Hono<AuthenticatedAppEnv>()
 
-  auth.post('/login', async (c) => {
-    const body = (await c.req.json().catch(() => null)) as LoginBody | null
-    const email = typeof body?.email === 'string' ? body.email.trim() : ''
-    const password = typeof body?.password === 'string' ? body.password : ''
-    const remember = body?.remember === true
-
-    if (!email || !password) {
-      return c.json({ ok: false, message: 'Email and password are required.' }, 400)
-    }
+  auth.post('/register', async (c) => {
+    const body = await c.req.json().catch(() => null)
 
     try {
-      const session = await getAuthService(c.env).login(email, password, remember)
+      const session = await getAuthService(c.env).register(body)
+      writeRefreshToken(c, session.refreshToken, session.refreshTokenExpiresAt)
+
+      return c.json(
+        {
+          ok: true,
+          message: 'Account created.',
+          user: session.user,
+          accessToken: session.accessToken,
+          accessTokenExpiresAt: session.accessTokenExpiresAt,
+        },
+        201,
+      )
+    } catch (error) {
+      return handleAuthError(c, error)
+    }
+  })
+
+  auth.post('/login', async (c) => {
+    const body = await c.req.json().catch(() => null)
+
+    try {
+      const session = await getAuthService(c.env).login(body)
       writeRefreshToken(c, session.refreshToken, session.refreshTokenExpiresAt)
 
       return c.json({
@@ -100,6 +111,14 @@ export function createAuthRoutes(getAuthService: (bindings: AppBindings) => Auth
 }
 
 function handleAuthError<E extends { Bindings: AppBindings }>(c: Context<E>, error: unknown) {
+  if (error instanceof InvalidAuthInputError) {
+    return c.json({ ok: false, message: error.message }, 400)
+  }
+
+  if (error instanceof EmailAlreadyTakenError) {
+    return c.json({ ok: false, message: error.message }, 409)
+  }
+
   if (error instanceof InvalidCredentialsError) {
     return c.json({ ok: false, message: error.message }, 401)
   }
