@@ -3,36 +3,18 @@
   "name": "api",
   "main": "src/index.ts",
   "compatibility_date": "2026-06-06",
-  // "compatibility_flags": [
-  //   "nodejs_compat"
-  // ],
-  // "vars": {
-  //   "MY_VAR": "my-variable"
-  // },
-  // "kv_namespaces": [
-  //   {
-  //     "binding": "MY_KV_NAMESPACE",
-  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  //   }
-  // ],
-  // "r2_buckets": [
-  //   {
-  //     "binding": "MY_BUCKET",
-  //     "bucket_name": "my-bucket"
-  //   }
-  // ],
+  "vars": {
+    "JWT_ACCESS_SECRET": "replace-me-with-a-long-random-secret",
+    "REFRESH_TOKEN_PEPPER": "replace-me-with-a-different-long-random-secret",
+    "JWT_ISSUER": "trip-api",
+    "JWT_AUDIENCE": "trip-app",
+    "APP_ORIGIN": "http://localhost:3000"
+  },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "my-database",
       "database_id": ""
     }
-  ],
-  // "ai": {
-  //   "binding": "AI"
-  // },
-  // "observability": {
-  //   "enabled": true,
-  //   "head_sampling_rate": 1
-  // }
+  ]
 }

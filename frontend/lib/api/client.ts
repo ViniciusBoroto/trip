@@ -14,7 +14,7 @@ function getApiBaseUrl() {
   return process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") || "http://localhost:8787";
 }
 
-type RequestOptions = {
+export type RequestOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: BodyInit | null;
   headers?: HeadersInit;
@@ -23,6 +23,7 @@ type RequestOptions = {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}) {
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     method: options.method ?? "GET",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...options.headers,

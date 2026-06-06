@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { startTransition, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   IconArrowRight,
   IconBrandGoogle,
@@ -10,7 +11,7 @@ import {
 } from "@tabler/icons-react";
 
 import { ApiClientError, getPublicApiBaseUrl } from "@/lib/api/client";
-import { login } from "@/services/auth";
+import { useAuth } from "@/components/auth-provider";
 import type { LoginRequest } from "@/types/auth";
 
 type FormStatus = {
@@ -19,6 +20,8 @@ type FormStatus = {
 };
 
 export function LoginForm() {
+  const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);
@@ -41,14 +44,18 @@ export function LoginForm() {
       return;
     }
 
-    setStatus({ kind: "loading", message: "Checking login route..." });
+    setStatus({ kind: "loading", message: "Authenticating..." });
 
     try {
-      const response = await login(payload);
+      const user = await login(payload);
 
       setStatus({
         kind: "success",
-        message: response?.message || "Login route responded successfully.",
+        message: `Authenticated as ${user.email}. Refresh token cookie issued by ${getPublicApiBaseUrl()}.`,
+      });
+
+      startTransition(() => {
+        router.replace("/");
       });
     } catch (error) {
       if (error instanceof ApiClientError) {

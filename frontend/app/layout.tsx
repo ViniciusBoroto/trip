@@ -1,8 +1,10 @@
-import '@tabler/core/dist/css/tabler.min.css';
+import "@tabler/core/dist/css/tabler.min.css";
 import type { Metadata } from "next";
 
+import { AuthProvider } from "@/components/auth-provider";
+
 export const metadata: Metadata = {
-  title: "Next.js + Tabler UI",
+  title: "Trip",
 };
 
 export default function RootLayout({
@@ -12,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

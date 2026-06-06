@@ -2,24 +2,27 @@ import { sql } from 'drizzle-orm'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 
+import { AuthService } from './application/auth/auth-service'
+import { D1RefreshTokenRepository } from './infra/repositories/refresh-token-repository'
+import { Pbkdf2PasswordHasher } from './infra/auth/password-hasher'
+import { JwtTokenService } from './infra/auth/token-service'
+import { D1UserRepository } from './infra/repositories/user-repository'
 import { getDb, type AppBindings } from './infra/db/client'
-
-type LoginBody = {
-  email?: unknown
-  password?: unknown
-  remember?: unknown
-}
+import { createAuthRouter } from './api/router'
 
 const app = new Hono<{ Bindings: AppBindings }>()
 
-app.use(
-  '/auth/*',
-  cors({
-    origin: '*',
+app.use('*', async (c, next) => {
+  const requestOrigin = c.req.header('Origin') ?? ''
+  const allowedOrigin = resolveAllowedOrigin(requestOrigin, c.env.APP_ORIGIN)
+
+  return cors({
+    origin: allowedOrigin,
+    credentials: true,
     allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type'],
-  }),
-)
+    allowHeaders: ['Content-Type', 'Authorization'],
+  })(c, next)
+})
 
 app.get('/', async (c) => {
   const db = getDb(c.env.DB)
@@ -31,39 +34,33 @@ app.get('/', async (c) => {
   })
 })
 
-app.get('/auth/session', (c) => {
-  return c.json({
-    authenticated: false,
-    user: null,
-    message: 'Session route placeholder. Wire auth state here.',
-  })
-})
-
-app.post('/auth/login', async (c) => {
-  const body = (await c.req.json().catch(() => null)) as LoginBody | null
-
-  return c.json(
-    {
-      ok: false,
-      message: 'Login route created, backend auth logic not implemented.',
-      received: {
-        email: typeof body?.email === 'string' ? body.email : null,
-        hasPassword: typeof body?.password === 'string' && body.password.length > 0,
-        remember: typeof body?.remember === 'boolean' ? body.remember : null,
-      },
-    },
-    501,
-  )
-})
-
-app.post('/auth/logout', (c) => {
-  return c.json(
-    {
-      ok: false,
-      message: 'Logout route created, backend auth logic not implemented.',
-    },
-    501,
-  )
-})
+app.route('/auth', createAuthRouter(getAuthService))
 
 export default app
+
+function getAuthService(bindings: AppBindings) {
+  const db = getDb(bindings.DB)
+
+  return new AuthService({
+    users: new D1UserRepository(db),
+    refreshTokens: new D1RefreshTokenRepository(db),
+    passwordHasher: new Pbkdf2PasswordHasher(),
+    tokenService: new JwtTokenService({
+      accessSecret: bindings.JWT_ACCESS_SECRET,
+      refreshPepper: bindings.REFRESH_TOKEN_PEPPER,
+      issuer: bindings.JWT_ISSUER ?? 'trip-api',
+      audience: bindings.JWT_AUDIENCE ?? 'trip-app',
+      accessTokenTtlSeconds: 15 * 60,
+      refreshTokenTtlSeconds: 7 * 24 * 60 * 60,
+      refreshTokenTtlRememberSeconds: 30 * 24 * 60 * 60,
+    }),
+  })
+}
+
+function resolveAllowedOrigin(requestOrigin: string, configuredOrigin?: string) {
+  if (configuredOrigin) {
+    return configuredOrigin
+  }
+
+  return requestOrigin || '*'
+}

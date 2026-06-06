@@ -2,16 +2,18 @@ import Link from "next/link";
 import { IconMapPin } from "@tabler/icons-react";
 
 import { LoginForm } from "@/components/login-form";
+import { LoginPageRedirect } from "@/components/login-page-redirect";
 
 const trustPoints = [
   "Email and password login",
-  "Google sign-in placeholder",
-  "API route ready for backend wiring",
+  "Refresh cookie handled by the browser",
+  "Short-lived access token kept in frontend memory",
 ];
 
 export default function LoginPage() {
   return (
     <main className="page page-center auth-shell">
+      <LoginPageRedirect />
       <div className="container container-tight py-4">
         <div className="text-center mb-4">
           <Link href="/login" className="navbar-brand navbar-brand-autodark auth-brand">
