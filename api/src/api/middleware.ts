@@ -3,7 +3,7 @@ import type { MiddlewareHandler } from 'hono'
 import type { AuthService } from '../application/auth/auth-service'
 import { UnauthorizedError } from '../domain/auth/errors'
 import type { AccessTokenClaims } from '../domain/auth/types'
-import type { AppBindings } from '../infra/db/client'
+import type { AppBindings } from '../di/bindings'
 
 type AuthVariables = {
   auth: AccessTokenClaims

@@ -1,7 +1,7 @@
 import type { Context } from 'hono'
 import { deleteCookie, getCookie, setCookie } from 'hono/cookie'
 
-import type { AppBindings } from '../infra/db/client'
+import type { AppBindings } from '../di/bindings'
 
 export const REFRESH_TOKEN_COOKIE = 'trip_refresh_token'
 

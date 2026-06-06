@@ -1,17 +1,17 @@
 import { Hono } from 'hono'
 import type { Context } from 'hono'
 
-import type { AuthService } from '../application/auth/auth-service'
+import type { AuthService } from '../../application/auth/auth-service'
+import type { AppBindings } from '../../di/bindings'
 import {
   AuthConfigurationError,
   InactiveUserError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
   UnauthorizedError,
-} from '../domain/auth/errors'
-import type { AppBindings } from '../di/bindings'
-import { clearRefreshToken, readRefreshToken, writeRefreshToken } from './cookies'
-import { createAuthMiddleware, type AuthenticatedAppEnv } from './middleware'
+} from '../../domain/auth/errors'
+import { clearRefreshToken, readRefreshToken, writeRefreshToken } from '../cookies'
+import { createAuthMiddleware, type AuthenticatedAppEnv } from '../middleware'
 
 type LoginBody = {
   email?: unknown
@@ -19,7 +19,7 @@ type LoginBody = {
   remember?: unknown
 }
 
-export function createAuthRouter(getAuthService: (bindings: AppBindings) => AuthService) {
+export function createAuthRoutes(getAuthService: (bindings: AppBindings) => AuthService) {
   const auth = new Hono<AuthenticatedAppEnv>()
 
   auth.post('/login', async (c) => {
