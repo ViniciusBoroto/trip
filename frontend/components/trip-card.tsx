@@ -46,7 +46,7 @@ export function TripCard({ trip, onDelete }: TripCardProps) {
   const hasPhoto = trip.photo && trip.photo.trim().length > 0;
 
   return (
-    <div className="card card-stacked shadow-sm h-100 d-flex flex-column trip-card-clickable">
+    <div className="card card-link card-stacked shadow-sm h-100 d-flex flex-column transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
       {/* Cover Photo */}
       <div
         className="card-img-top img-responsive"

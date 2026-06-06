@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   IconArrowRight,
+  IconEye,
+  IconEyeOff,
   IconLock,
   IconMail,
   IconUser,
@@ -25,6 +27,7 @@ export function RegisterForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [remember, setRemember] = useState(true);
   const [status, setStatus] = useState<FormStatus>({ kind: "idle" });
 
@@ -147,7 +150,7 @@ export function RegisterForm() {
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               className="form-control"
               placeholder="Create a password"
               autoComplete="new-password"
@@ -155,6 +158,16 @@ export function RegisterForm() {
               onChange={(event) => setPassword(event.target.value)}
               disabled={status.kind === "loading"}
             />
+            <button
+              type="button"
+              className="input-icon-addon border-0"
+              style={{ pointerEvents: "auto", cursor: "pointer" }}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((prev) => !prev)}
+              disabled={status.kind === "loading"}
+            >
+              {showPassword ? <IconEyeOff size={18} stroke={1.8} /> : <IconEye size={18} stroke={1.8} />}
+            </button>
           </div>
         </div>
 
