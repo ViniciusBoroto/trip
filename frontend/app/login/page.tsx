@@ -4,12 +4,6 @@ import { IconMapPin } from "@tabler/icons-react";
 import { LoginForm } from "@/components/login-form";
 import { LoginPageRedirect } from "@/components/login-page-redirect";
 
-const trustPoints = [
-  "Email and password login",
-  "Refresh cookie handled by the browser",
-  "Short-lived access token kept in frontend memory",
-];
-
 export default function LoginPage() {
   return (
     <main className="page page-center auth-shell">
@@ -36,11 +30,6 @@ export default function LoginPage() {
 
             <LoginForm />
 
-            <ul className="auth-points list-unstyled mb-0 mt-4">
-              {trustPoints.map((point) => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
           </div>
         </div>
 

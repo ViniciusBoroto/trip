@@ -184,7 +184,7 @@ export function RegisterForm() {
         role="status"
         aria-live="polite"
       >
-        {status.message || `Form posts to ${getPublicApiBaseUrl()}/auth/register`}
+        {status.message}
       </div>
     </>
   );

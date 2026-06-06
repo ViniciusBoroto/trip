@@ -1,7 +1,7 @@
 import type { PasswordHasher } from '../../application/auth/ports'
 
 const encoder = new TextEncoder()
-const HASH_ITERATIONS = 600_000
+const HASH_ITERATIONS = 100_000
 
 export class Pbkdf2PasswordHasher implements PasswordHasher {
   async hash(password: string): Promise<string> {

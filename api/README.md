@@ -69,8 +69,17 @@ pbkdf2_sha256$<iterations>$<salt>$<hex digest>
 Implemented endpoints:
 
 ```txt
+POST /auth/register
 POST /auth/login
 POST /auth/refresh
 POST /auth/logout
 GET /auth/me
+```
+
+Registration validation rules:
+
+```txt
+name: required
+email: required, valid email
+password: required, minimum 8 characters
 ```

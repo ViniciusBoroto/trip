@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   IconArrowRight,
-  IconBrandGoogle,
   IconLock,
   IconMail,
 } from "@tabler/icons-react";
@@ -152,17 +151,9 @@ export function LoginForm() {
         role="status"
         aria-live="polite"
       >
-        {status.message || `Form posts to ${getPublicApiBaseUrl()}/auth/login`}
+        {status.message}
       </div>
 
-      <div className="auth-divider" aria-hidden="true">
-        <span>Or</span>
-      </div>
-
-      <button type="button" className="btn btn-outline-secondary w-100 auth-social">
-        <IconBrandGoogle size={18} stroke={2} />
-        <span>Continue with Google</span>
-      </button>
     </>
   );
 }

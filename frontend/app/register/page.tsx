@@ -4,12 +4,6 @@ import { IconMapPin } from "@tabler/icons-react";
 import { LoginPageRedirect } from "@/components/login-page-redirect";
 import { RegisterForm } from "@/components/register-form";
 
-const trustPoints = [
-  "Account created directly in the auth database",
-  "Refresh cookie handled by the browser",
-  "Short-lived access token kept in frontend memory",
-];
-
 export default function RegisterPage() {
   return (
     <main className="page page-center auth-shell">
@@ -36,11 +30,6 @@ export default function RegisterPage() {
 
             <RegisterForm />
 
-            <ul className="auth-points list-unstyled mb-0 mt-4">
-              {trustPoints.map((point) => (
-                <li key={point}>{point}</li>
-              ))}
-            </ul>
           </div>
         </div>
 
