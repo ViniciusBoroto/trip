@@ -27,13 +27,14 @@ A Cloudflare-powered web application for managing trips and itineraries.
   Added Update actions even though not asked in the specs.
   Itinerary specs defined Date but I used DateTime for tracking itinerary activities chronologically.
   Users cannot create past trips.
-- **Security**:
-  CORS
-- **Probable next features**:
-  Email confirmation and Forgot your password.
-  Rate Limiting and OTP rate-limiting.
 - **Mobile-first approach**:
   Designed with mobile-first approach, but is responsive and works on desktop as well.
+- **Security**:
+  CORS
+  
+- ### Probable next features and security improvements:
+  - Email confirmation and Forgot your password.
+  - Rate Limiting and OTP-specific rate-limiting.
 
 ## Architecture
 
