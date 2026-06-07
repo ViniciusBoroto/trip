@@ -6,9 +6,9 @@
   "vars": {
     "JWT_ACCESS_SECRET": "replace-me-with-a-long-random-secret",
     "REFRESH_TOKEN_PEPPER": "replace-me-with-a-different-long-random-secret",
-    "JWT_ISSUER": "trip-api",
-    "JWT_AUDIENCE": "trip-app",
-    "APP_ORIGIN": "http://localhost:3000",
+    "JWT_ISSUER": "YOUR_ISSUER",
+    "JWT_AUDIENCE": "YOUR_AUDIENCE",
+    "APP_ORIGIN": "YOUR_BASE_URL",
     "EMAIL_FROM": "youremail@email.com",
     "RESEND_API_KEY": "yourapikey"
   },
