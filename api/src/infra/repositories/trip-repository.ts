@@ -1,6 +1,7 @@
-import { eq } from 'drizzle-orm'
+import { and, or, like, eq, count } from 'drizzle-orm'
+import type { SQL } from 'drizzle-orm'
 
-import type { TripRepository } from '../../application/trip/ports'
+import type { TripQuery, TripRepository } from '../../application/trip/ports'
 import type { Trip } from '../../domain/trip/types'
 import type { DbClient } from '../db/client'
 import { tripsTable } from '../db/schema'
@@ -8,11 +9,40 @@ import { tripsTable } from '../db/schema'
 export class D1TripRepository implements TripRepository {
   constructor(private readonly db: DbClient) {}
 
-  async findAllByUser(userId: string): Promise<Trip[]> {
-    const results = await this.db.query.tripsTable.findMany({
-      where: eq(tripsTable.userId, userId),
-    })
-    return results.map(mapTrip)
+  async findAllByUser(userId: string, query?: TripQuery): Promise<{ trips: Trip[]; total: number }> {
+    const page = Math.max(1, query?.page ?? 1)
+    const pageSize = Math.max(1, Math.min(100, query?.pageSize ?? 12))
+
+    const conditions: SQL[] = [eq(tripsTable.userId, userId)]
+
+    if (query?.search) {
+      const pattern = `%${query.search}%`
+      conditions.push(
+        or(
+          like(tripsTable.name, pattern),
+          like(tripsTable.description, pattern),
+          like(tripsTable.category, pattern),
+        )!,
+      )
+    }
+
+    if (query?.category) {
+      conditions.push(eq(tripsTable.category, query.category))
+    }
+
+    const [{ count: total }] = await this.db
+      .select({ count: count() })
+      .from(tripsTable)
+      .where(and(...conditions))
+
+    const results = await this.db
+      .select()
+      .from(tripsTable)
+      .where(and(...conditions))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize)
+
+    return { trips: results.map(mapTrip), total }
   }
 
   async findById(id: string): Promise<Trip | null> {

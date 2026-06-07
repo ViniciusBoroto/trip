@@ -25,8 +25,14 @@ export function createTripRoutes(
   router.get('/', async (c) => {
     try {
       const claims = c.get('auth')
-      const trips = await getTripService(c.env).listTrips(claims.sub)
-      return c.json({ ok: true, trips })
+      const { search, category, page, pageSize } = c.req.query()
+      const result = await getTripService(c.env).listTrips(claims.sub, {
+        search,
+        category,
+        page: page ? Number(page) : undefined,
+        pageSize: pageSize ? Number(pageSize) : undefined,
+      })
+      return c.json({ ok: true, ...result })
     } catch (error) {
       return handleTripError(c, error)
     }

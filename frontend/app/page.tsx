@@ -1,15 +1,19 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { IconPlus, IconPlane, IconLogout, IconGlobe } from "@tabler/icons-react";
+import { IconPlus, IconPlane, IconLogout, IconGlobe, IconSearch } from "@tabler/icons-react";
 
 import { ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/auth-provider";
 import { TripCard } from "@/components/trip-card";
+import { TripFilters } from "@/components/trip-filters";
 import { TripForm } from "@/components/trip-form";
+import { TripsPagination } from "@/components/trips-pagination";
 import { listTrips, createTrip, deleteTrip } from "@/services/trips";
 import type { Trip, CreateTripRequest } from "@/types/trip";
+
+const PAGE_SIZE = 12;
 
 export default function Home() {
   const router = useRouter();
@@ -19,7 +23,21 @@ export default function Home() {
   const [loadingTrips, setLoadingTrips] = useState(false);
   const [errorTrips, setErrorTrips] = useState<string | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
   const [showAddForm, setShowAddForm] = useState(false);
+
+  const handleFilterChange = useCallback(
+    (filters: { search: string; category: string }) => {
+      setSearch(filters.search);
+      setCategory(filters.category);
+      setPage(1);
+    },
+    [],
+  );
 
   // Authentication redirect
   useEffect(() => {
@@ -31,7 +49,7 @@ export default function Home() {
     });
   }, [router, status]);
 
-  // Fetch trips when authenticated
+  // Fetch trips when authenticated or query changes
   useEffect(() => {
     if (status !== "authenticated") {
       return;
@@ -41,9 +59,10 @@ export default function Home() {
       setLoadingTrips(true);
       setErrorTrips(null);
       try {
-        const res = await listTrips();
+        const res = await listTrips({ search, category, page, pageSize: PAGE_SIZE });
         if (res?.ok) {
           setTrips(res.trips);
+          setTotal(res.total);
         } else {
           setErrorTrips(res?.message || "Failed to load trips.");
         }
@@ -59,7 +78,7 @@ export default function Home() {
     }
 
     void load();
-  }, [status]);
+  }, [status, search, category, page]);
 
   async function handleCreateTrip(data: CreateTripRequest) {
     const res = await createTrip(data);
@@ -180,6 +199,8 @@ export default function Home() {
             </div>
           )}
 
+          <TripFilters search={search} category={category} onChange={handleFilterChange} />
+
           {loadingTrips ? (
             <div className="d-flex flex-column align-items-center py-5">
               <div className="spinner-border text-primary mb-2" role="status" />
@@ -187,28 +208,52 @@ export default function Home() {
             </div>
           ) : trips.length === 0 ? (
             <div className="text-center py-5 my-4 border rounded-3 bg-white shadow-sm">
-              <IconGlobe size={48} stroke={1.5} className="text-muted mb-3" />
-              <h3 className="h3 mb-2">No trips planned yet</h3>
-              <p className="text-secondary mb-4 mx-auto" style={{ maxWidth: "400px" }}>
-                Add your first adventure to start scheduling flights, booking hotels, and planning your daily activities!
-              </p>
-              <button
-                type="button"
-                className="btn btn-primary d-inline-flex align-items-center gap-1"
-                onClick={() => setShowAddForm(true)}
-              >
-                <IconPlus size={16} />
-                <span>Plan Your First Trip</span>
-              </button>
+              {search || category ? (
+                <>
+                  <IconSearch size={48} stroke={1.5} className="text-muted mb-3" />
+                  <h3 className="h3 mb-2">No trips match your search</h3>
+                  <p className="text-secondary mb-4 mx-auto" style={{ maxWidth: "400px" }}>
+                    Try adjusting your filters or search terms.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <IconGlobe size={48} stroke={1.5} className="text-muted mb-3" />
+                  <h3 className="h3 mb-2">No trips planned yet</h3>
+                  <p className="text-secondary mb-4 mx-auto" style={{ maxWidth: "400px" }}>
+                    Add your first adventure to start scheduling flights, booking hotels, and planning your daily activities!
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-primary d-inline-flex align-items-center gap-1"
+                    onClick={() => setShowAddForm(true)}
+                  >
+                    <IconPlus size={16} />
+                    <span>Plan Your First Trip</span>
+                  </button>
+                </>
+              )}
             </div>
           ) : (
-            <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
-              {trips.map((trip) => (
-                <div key={trip.id} className="col">
-                  <TripCard trip={trip} onDelete={handleDeleteTrip} />
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="d-flex align-items-center justify-content-between mb-2">
+                <p className="text-secondary small mb-0">
+                  Showing {trips.length} of {total} trip{total !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                {trips.map((trip) => (
+                  <div key={trip.id} className="col">
+                    <TripCard trip={trip} onDelete={handleDeleteTrip} />
+                  </div>
+                ))}
+              </div>
+              <TripsPagination
+                page={page}
+                totalPages={Math.ceil(total / PAGE_SIZE)}
+                onPageChange={setPage}
+              />
+            </>
           )}
         </div>
       </main>

@@ -35,9 +35,19 @@ export type CreateItineraryItemRequest = {
   type: string;
 };
 
+export type TripQuery = {
+  search?: string;
+  category?: string;
+  page?: number;
+  pageSize?: number;
+};
+
 export type ListTripsResponse = {
   ok: boolean;
   trips: Trip[];
+  total: number;
+  page: number;
+  pageSize: number;
   message?: string;
 };
 

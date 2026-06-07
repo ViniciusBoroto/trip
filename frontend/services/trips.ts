@@ -7,10 +7,18 @@ import type {
   GenericResponse,
   CreateTripRequest,
   CreateItineraryItemRequest,
+  TripQuery,
 } from "@/types/trip";
 
-export async function listTrips() {
-  const res = await authenticatedRequest<ListTripsResponse>("/trips", {
+export async function listTrips(query?: TripQuery) {
+  const params = new URLSearchParams();
+  if (query?.search) params.set("search", query.search);
+  if (query?.category) params.set("category", query.category);
+  if (query?.page) params.set("page", String(query.page));
+  if (query?.pageSize) params.set("pageSize", String(query.pageSize));
+  const qs = params.toString();
+  const url = `/trips${qs ? `?${qs}` : ""}`;
+  const res = await authenticatedRequest<ListTripsResponse>(url, {
     method: "GET",
   });
   return res;

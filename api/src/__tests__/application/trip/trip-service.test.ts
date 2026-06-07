@@ -64,11 +64,15 @@ describe('TripService', () => {
   })
 
   it('lists trips sorted by startDate', async () => {
-    const list = await tripService.listTrips('user-1')
-    expect(list.length).toBe(1)
-    expect(list[0].name).toBe('Italian Summer')
-    expect(list[0].itinerary.length).toBe(1)
-    expect(list[0].itinerary[0].name).toBe('Colosseum Tour')
+    mockTripsRepo.findAllByUser = mock(() => Promise.resolve({ trips: [mockTrip], total: 1 }))
+    const result = await tripService.listTrips('user-1')
+    expect(result.trips.length).toBe(1)
+    expect(result.total).toBe(1)
+    expect(result.page).toBe(1)
+    expect(result.pageSize).toBe(12)
+    expect(result.trips[0].name).toBe('Italian Summer')
+    expect(result.trips[0].itinerary.length).toBe(1)
+    expect(result.trips[0].itinerary[0].name).toBe('Colosseum Tour')
   })
 
   it('gets a single trip if authorized', async () => {

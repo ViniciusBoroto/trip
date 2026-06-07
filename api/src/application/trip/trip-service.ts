@@ -8,7 +8,7 @@ import {
   parseCreateTripInput,
   parseCreateItineraryItemInput,
 } from './trip-input'
-import type { ItineraryItemRepository, TripRepository } from './ports'
+import type { ItineraryItemRepository, TripRepository, TripQuery } from './ports'
 
 type Dependencies = {
   trips: TripRepository
@@ -18,18 +18,26 @@ type Dependencies = {
 export class TripService {
   constructor(private readonly deps: Dependencies) {}
 
-  async listTrips(userId: string): Promise<PublicTrip[]> {
-    const trips = await this.deps.trips.findAllByUser(userId)
-    
-    // For each trip, load itinerary items to construct PublicTrip objects
+  async listTrips(
+    userId: string,
+    query: TripQuery = {},
+  ): Promise<{ trips: PublicTrip[]; total: number; page: number; pageSize: number }> {
+    const { trips, total } = await this.deps.trips.findAllByUser(userId, query)
+
     const publicTrips: PublicTrip[] = []
     for (const trip of trips) {
       const items = await this.deps.itineraryItems.findAllByTrip(trip.id)
       publicTrips.push(mapToPublicTrip(trip, items))
     }
 
-    // Sort trips by start date ascending, or created_at descending? Let's sort by start date ascending
-    return publicTrips.sort((a, b) => a.startDate.localeCompare(b.startDate))
+    publicTrips.sort((a, b) => a.startDate.localeCompare(b.startDate))
+
+    return {
+      trips: publicTrips,
+      total,
+      page: Math.max(1, query.page ?? 1),
+      pageSize: Math.max(1, query.pageSize ?? 12),
+    }
   }
 
   async getTrip(userId: string, tripId: string): Promise<PublicTrip> {

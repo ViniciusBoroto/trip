@@ -1,7 +1,14 @@
 import type { ItineraryItem, Trip } from '../../domain/trip/types'
 
+export type TripQuery = {
+  search?: string
+  category?: string
+  page?: number
+  pageSize?: number
+}
+
 export interface TripRepository {
-  findAllByUser(userId: string): Promise<Trip[]>
+  findAllByUser(userId: string, query?: TripQuery): Promise<{ trips: Trip[]; total: number }>
   findById(id: string): Promise<Trip | null>
   create(trip: Trip): Promise<void>
   delete(id: string): Promise<void>
