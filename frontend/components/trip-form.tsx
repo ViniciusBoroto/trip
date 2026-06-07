@@ -52,6 +52,10 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
       setError("Start date must be before or equal to end date.");
       return;
     }
+    if (new Date(startDate) < new Date(new Date().toDateString())) {
+      setError("Start date cannot be in the past.");
+      return;
+    }
 
     setLoading(true);
 
@@ -135,6 +139,7 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
                 id="start-date"
                 type="date"
                 className="form-control form-control-sm"
+                min={new Date().toISOString().split("T")[0]}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 disabled={loading}
@@ -149,6 +154,7 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
                 id="end-date"
                 type="date"
                 className="form-control form-control-sm"
+                min={new Date().toISOString().split("T")[0]}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={loading}
