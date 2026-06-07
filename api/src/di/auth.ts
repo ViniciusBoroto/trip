@@ -1,7 +1,9 @@
 import { AuthService } from '../application/auth/auth-service'
+import { CfEmailSender } from '../infra/email/cf-email-sender'
 import { Pbkdf2PasswordHasher } from '../infra/auth/password-hasher'
 import { JwtTokenService } from '../infra/auth/token-service'
 import { getDb } from '../infra/db/client'
+import { D1OtpRepository } from '../infra/repositories/otp-repository'
 import { D1RefreshTokenRepository } from '../infra/repositories/refresh-token-repository'
 import { D1UserRepository } from '../infra/repositories/user-repository'
 import type { AppBindings } from './bindings'
@@ -12,6 +14,8 @@ export function getAuthService(bindings: AppBindings) {
   return new AuthService({
     users: new D1UserRepository(db),
     refreshTokens: new D1RefreshTokenRepository(db),
+    otps: new D1OtpRepository(db),
+    emailSender: new CfEmailSender(bindings.EMAIL, bindings.EMAIL_FROM),
     passwordHasher: new Pbkdf2PasswordHasher(),
     tokenService: new JwtTokenService({
       accessSecret: bindings.JWT_ACCESS_SECRET,

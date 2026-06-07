@@ -28,7 +28,7 @@ export class D1UserRepository implements UserRepository {
     id: string
     email: string
     name: string
-    passwordHash: string
+    passwordHash: string | null
     isActive: boolean
     createdAt: string
   }): Promise<AuthUser> {

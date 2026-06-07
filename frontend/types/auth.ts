@@ -44,3 +44,8 @@ export type MeResponse =
       user: AuthUser;
     }
   | AuthErrorResponse;
+
+export type SendOtpRequest = { email: string };
+export type SendOtpResponse = { ok: boolean; message: string };
+export type VerifyOtpRequest = { email: string; code: string; remember: boolean };
+export type VerifyOtpResponse = AuthSuccessResponse | AuthErrorResponse;

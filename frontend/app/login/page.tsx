@@ -20,6 +20,13 @@ export default function LoginPage() {
             >
               Create an account
             </Link>
+            {" · "}
+            <Link
+              href="/login-otp"
+              className="text-[oklch(0.47_0.08_250)] font-semibold no-underline hover:text-[oklch(0.42_0.09_250)]"
+            >
+              Sign in with email code
+            </Link>
           </>
         }
       >

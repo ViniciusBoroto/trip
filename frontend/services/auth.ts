@@ -7,6 +7,10 @@ import type {
   RefreshResponse,
   RegisterRequest,
   RegisterResponse,
+  SendOtpRequest,
+  SendOtpResponse,
+  VerifyOtpRequest,
+  VerifyOtpResponse,
 } from "@/types/auth";
 
 export async function register(payload: RegisterRequest) {
@@ -40,5 +44,19 @@ export async function getCurrentUser(accessToken: string) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+  });
+}
+
+export async function sendOtp(payload: SendOtpRequest) {
+  return apiRequest<SendOtpResponse>("/auth/otp/send", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function verifyOtp(payload: VerifyOtpRequest) {
+  return apiRequest<VerifyOtpResponse>("/auth/otp/verify", {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 }

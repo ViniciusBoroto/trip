@@ -4,7 +4,7 @@ export const usersTable = sqliteTable('users', {
   id: text('id').primaryKey(),
   email: text('email').notNull().unique(),
   name: text('name').notNull(),
-  passwordHash: text('password_hash').notNull(),
+  passwordHash: text('password_hash'),
   isActive: integer('is_active', { mode: 'boolean' }).notNull().default(true),
   createdAt: text('created_at').notNull(),
 })
@@ -44,8 +44,18 @@ export const itineraryItemsTable = sqliteTable('itinerary_items', {
   createdAt: text('created_at').notNull(),
 })
 
+export const emailOtpsTable = sqliteTable('email_otps', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull(),
+  codeHash: text('code_hash').notNull(),
+  expiresAt: text('expires_at').notNull(),
+  usedAt: text('used_at'),
+  createdAt: text('created_at').notNull(),
+})
+
 export type UserRow = typeof usersTable.$inferSelect
 export type RefreshTokenRow = typeof refreshTokensTable.$inferSelect
 export type TripRow = typeof tripsTable.$inferSelect
 export type ItineraryItemRow = typeof itineraryItemsTable.$inferSelect
+export type EmailOtpRow = typeof emailOtpsTable.$inferSelect
 

@@ -14,8 +14,9 @@ import {
   login as loginRequest,
   logout as logoutRequest,
   register as registerRequest,
+  verifyOtp as verifyOtpRequest,
 } from "@/services/auth";
-import type { AuthUser, LoginRequest, MeResponse, RegisterRequest } from "@/types/auth";
+import type { AuthUser, LoginRequest, MeResponse, RegisterRequest, VerifyOtpRequest } from "@/types/auth";
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
 
@@ -24,6 +25,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   login: (payload: LoginRequest) => Promise<AuthUser>;
   register: (payload: RegisterRequest) => Promise<AuthUser>;
+  verifyOtp: (payload: VerifyOtpRequest) => Promise<AuthUser>;
   logout: () => Promise<void>;
   authenticatedRequest: <T>(path: string, options?: Parameters<typeof runAuthenticatedRequest>[1]) => Promise<T | null>;
 };
@@ -98,6 +100,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return completeAuthentication(response.accessToken, response.user);
   }
 
+  async function verifyOtp(payload: VerifyOtpRequest) {
+    const response = await verifyOtpRequest(payload);
+
+    if (!response?.ok || !response.accessToken) {
+      throw new ApiClientError(response?.message || "Sign-in failed.", 401, response);
+    }
+
+    return completeAuthentication(response.accessToken, response.user);
+  }
+
   async function logout() {
     try {
       await logoutRequest();
@@ -142,6 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         login,
         register,
+        verifyOtp,
         logout,
         authenticatedRequest,
       }}

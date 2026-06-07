@@ -46,3 +46,17 @@ export class AuthConfigurationError extends Error {
     this.name = 'AuthConfigurationError'
   }
 }
+
+export class OtpNotFoundError extends Error {
+  constructor() {
+    super('No valid sign-in code found for this email.')
+    this.name = 'OtpNotFoundError'
+  }
+}
+
+export class OtpExpiredOrUsedError extends Error {
+  constructor() {
+    super('The sign-in code has expired or was already used.')
+    this.name = 'OtpExpiredOrUsedError'
+  }
+}

@@ -1,7 +1,7 @@
 import { describe, it, expect, mock, beforeEach } from 'bun:test'
 
 import { AuthService } from '../../../application/auth/auth-service'
-import type { PasswordHasher, RefreshTokenRepository, TokenService, UserRepository } from '../../../application/auth/ports'
+import type { EmailSender, OtpRepository, PasswordHasher, RefreshTokenRepository, TokenService, UserRepository } from '../../../application/auth/ports'
 import {
   EmailAlreadyTakenError,
   InactiveUserError,
@@ -69,7 +69,18 @@ function makeMocks(overrides: Partial<{
     now: mock(() => now),
   }
 
-  return { mockUsers, mockRefreshTokens, mockPasswordHasher, mockTokenService }
+  const mockOtps: OtpRepository = {
+    create: mock(() => Promise.resolve()),
+    findActiveByEmail: mock(() => Promise.resolve(null)),
+    markUsed: mock(() => Promise.resolve()),
+    revokeByEmail: mock(() => Promise.resolve()),
+  }
+
+  const mockEmailSender: EmailSender = {
+    sendOtp: mock(() => Promise.resolve()),
+  }
+
+  return { mockUsers, mockRefreshTokens, mockPasswordHasher, mockTokenService, mockOtps, mockEmailSender }
 }
 
 function createService(mocks: ReturnType<typeof makeMocks>) {
@@ -78,6 +89,8 @@ function createService(mocks: ReturnType<typeof makeMocks>) {
     refreshTokens: mocks.mockRefreshTokens,
     passwordHasher: mocks.mockPasswordHasher,
     tokenService: mocks.mockTokenService,
+    otps: mocks.mockOtps,
+    emailSender: mocks.mockEmailSender,
   })
 }
 

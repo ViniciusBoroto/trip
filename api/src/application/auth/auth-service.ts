@@ -3,10 +3,14 @@ import {
   InactiveUserError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
+  OtpExpiredOrUsedError,
+  OtpNotFoundError,
 } from '../../domain/auth/errors'
 import type { AccessTokenClaims, AuthUser, PublicAuthUser } from '../../domain/auth/types'
-import { parseLoginInput, parseRegisterInput } from './auth-input'
+import { parseLoginInput, parseRegisterInput, parseSendOtpInput, parseVerifyOtpInput } from './auth-input'
 import type {
+  EmailSender,
+  OtpRepository,
   PasswordHasher,
   RefreshTokenRepository,
   TokenService,
@@ -18,6 +22,8 @@ type Dependencies = {
   refreshTokens: RefreshTokenRepository
   passwordHasher: PasswordHasher
   tokenService: TokenService
+  otps: OtpRepository
+  emailSender: EmailSender
 }
 
 export class AuthService {
@@ -63,6 +69,11 @@ export class AuthService {
 
     if (!user.isActive) {
       throw new InactiveUserError()
+    }
+
+    if (!user.passwordHash) {
+      // OTP-only account — cannot sign in with password
+      throw new InvalidCredentialsError()
     }
 
     const passwordMatches = await this.deps.passwordHasher.verify(password, user.passwordHash)
@@ -149,6 +160,67 @@ export class AuthService {
     return toPublicUser(user.id, user.email, user.name)
   }
 
+  async sendOtp(input: unknown): Promise<void> {
+    const { email } = parseSendOtpInput(input)
+    const code = generateOtpCode()
+    const codeHash = await hashOtpCode(code)
+    const now = this.deps.tokenService.now()
+    const expiresAt = new Date(now.getTime() + OTP_TTL_MS)
+
+    await this.deps.otps.revokeByEmail(email, now.toISOString())
+
+    await this.deps.otps.create({
+      id: crypto.randomUUID(),
+      email,
+      codeHash,
+      expiresAt: expiresAt.toISOString(),
+      createdAt: now.toISOString(),
+    })
+
+    await this.deps.emailSender.sendOtp(email, code)
+  }
+
+  async verifyOtp(input: unknown) {
+    const { email, code, remember } = parseVerifyOtpInput(input)
+    const now = this.deps.tokenService.now()
+    const otp = await this.deps.otps.findActiveByEmail(email, now)
+
+    if (!otp) {
+      throw new OtpNotFoundError()
+    }
+
+    if (otp.usedAt || new Date(otp.expiresAt).getTime() <= now.getTime()) {
+      throw new OtpExpiredOrUsedError()
+    }
+
+    const submittedHash = await hashOtpCode(code)
+    if (submittedHash !== otp.codeHash) {
+      throw new OtpNotFoundError()
+    }
+
+    await this.deps.otps.markUsed(otp.id, now.toISOString())
+
+    let user = await this.deps.users.findByEmail(email)
+
+    if (!user) {
+      const emailPrefix = email.split('@')[0] ?? email
+      user = await this.deps.users.create({
+        id: crypto.randomUUID(),
+        email,
+        name: emailPrefix,
+        passwordHash: null,
+        isActive: true,
+        createdAt: now.toISOString(),
+      })
+    }
+
+    if (!user.isActive) {
+      throw new InactiveUserError()
+    }
+
+    return this.createSession(user, remember)
+  }
+
   private async createSession(user: AuthUser, remember: boolean) {
     const session = await this.deps.tokenService.issueSession(user, remember)
     const tokenHash = await this.deps.tokenService.fingerprintToken(session.refreshToken)
@@ -179,4 +251,19 @@ function isDuplicateEmailError(error: unknown) {
   }
 
   return /unique/i.test(error.message) && /users\.email|email/i.test(error.message)
+}
+
+const OTP_TTL_MS = 10 * 60 * 1000 // 10 minutes
+
+function generateOtpCode(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(4))
+  const num = ((bytes[0]! << 24) | (bytes[1]! << 16) | (bytes[2]! << 8) | bytes[3]!) >>> 0
+  return String(num % 1_000_000).padStart(6, '0')
+}
+
+const encoder = new TextEncoder()
+
+async function hashOtpCode(code: string): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', encoder.encode(code))
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
 }

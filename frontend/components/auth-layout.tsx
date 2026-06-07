@@ -1,6 +1,7 @@
 "use client";
 
-import type { ComponentType, InputHTMLAttributes, ReactNode } from "react";
+import type { ComponentType, InputHTMLAttributes, ReactNode, Ref } from "react";
+import { forwardRef } from "react";
 import Link from "next/link";
 import { IconMapPin } from "@tabler/icons-react";
 
@@ -13,15 +14,18 @@ type AuthInputProps = InputHTMLAttributes<HTMLInputElement> & {
   suffix?: ReactNode;
 };
 
-export function AuthInput({
-  id,
-  label,
-  labelRight,
-  icon: Icon,
-  suffix,
-  className = "",
-  ...props
-}: AuthInputProps) {
+export const AuthInput = forwardRef(function AuthInput(
+  {
+    id,
+    label,
+    labelRight,
+    icon: Icon,
+    suffix,
+    className = "",
+    ...props
+  }: AuthInputProps,
+  ref: Ref<HTMLInputElement>,
+) {
   return (
     <div className="mb-3">
       <div className="d-flex align-items-center justify-content-between gap-3 mb-2">
@@ -36,6 +40,7 @@ export function AuthInput({
         </span>
         <input
           id={id}
+          ref={ref}
           className={`form-control h-12 border-[oklch(0.87_0.013_240)] rounded-[0.875rem] bg-white text-[oklch(0.22_0.02_252)] placeholder-[oklch(0.48_0.02_245)] focus:border-[oklch(0.58_0.19_256_/_0.75)] focus:shadow-[0_0_0_0.2rem_oklch(0.58_0.19_256_/_0.14)] disabled:cursor-not-allowed ${className}`}
           {...props}
         />
@@ -43,7 +48,7 @@ export function AuthInput({
       </div>
     </div>
   );
-}
+});
 
 // --- AUTH BUTTON COMPONENT ---
 type AuthButtonProps = {

@@ -10,6 +10,23 @@ export type CreateRefreshTokenInput = {
   remember: boolean
 }
 
+export type CreateOtpInput = {
+  id: string
+  email: string
+  codeHash: string
+  expiresAt: string
+  createdAt: string
+}
+
+export type OtpRecord = {
+  id: string
+  email: string
+  codeHash: string
+  expiresAt: string
+  usedAt: string | null
+  createdAt: string
+}
+
 export interface UserRepository {
   findByEmail(email: string): Promise<AuthUser | null>
   findById(id: string): Promise<AuthUser | null>
@@ -17,7 +34,7 @@ export interface UserRepository {
     id: string
     email: string
     name: string
-    passwordHash: string
+    passwordHash: string | null
     isActive: boolean
     createdAt: string
   }): Promise<AuthUser>
@@ -41,4 +58,15 @@ export interface TokenService {
   fingerprintToken(token: string): Promise<string>
   generateRefreshTokenId(): string
   now(): Date
+}
+
+export interface OtpRepository {
+  create(input: CreateOtpInput): Promise<void>
+  findActiveByEmail(email: string, now: Date): Promise<OtpRecord | null>
+  markUsed(id: string, usedAt: string): Promise<void>
+  revokeByEmail(email: string, usedAt: string): Promise<void>
+}
+
+export interface EmailSender {
+  sendOtp(email: string, code: string): Promise<void>
 }

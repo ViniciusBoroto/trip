@@ -10,6 +10,8 @@ import {
   InvalidAuthInputError,
   InvalidCredentialsError,
   InvalidRefreshTokenError,
+  OtpExpiredOrUsedError,
+  OtpNotFoundError,
   UnauthorizedError,
 } from '../../domain/auth/errors'
 import { clearRefreshToken, readRefreshToken, writeRefreshToken } from '../cookies'
@@ -107,6 +109,36 @@ export function createAuthRoutes(getAuthService: (bindings: AppBindings) => Auth
     }
   })
 
+  auth.post('/otp/send', async (c) => {
+    const body = await c.req.json().catch(() => null)
+
+    try {
+      await getAuthService(c.env).sendOtp(body)
+      return c.json({ ok: true, message: 'Code sent. Check your email.' })
+    } catch (error) {
+      return handleAuthError(c, error)
+    }
+  })
+
+  auth.post('/otp/verify', async (c) => {
+    const body = await c.req.json().catch(() => null)
+
+    try {
+      const session = await getAuthService(c.env).verifyOtp(body)
+      writeRefreshToken(c, session.refreshToken, session.refreshTokenExpiresAt)
+
+      return c.json({
+        ok: true,
+        message: 'Authenticated.',
+        user: session.user,
+        accessToken: session.accessToken,
+        accessTokenExpiresAt: session.accessTokenExpiresAt,
+      })
+    } catch (error) {
+      return handleAuthError(c, error)
+    }
+  })
+
   return auth
 }
 
@@ -129,6 +161,14 @@ function handleAuthError<E extends { Bindings: AppBindings }>(c: Context<E>, err
 
   if (error instanceof InactiveUserError) {
     return c.json({ ok: false, message: error.message }, 403)
+  }
+
+  if (error instanceof OtpNotFoundError) {
+    return c.json({ ok: false, message: error.message }, 401)
+  }
+
+  if (error instanceof OtpExpiredOrUsedError) {
+    return c.json({ ok: false, message: error.message }, 401)
   }
 
   if (error instanceof AuthConfigurationError) {

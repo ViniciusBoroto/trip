@@ -108,3 +108,62 @@ export function parseRegisterInput(input: unknown): RegisterInput {
 
   return result.data
 }
+
+export type SendOtpInput = { email: string }
+export type VerifyOtpInput = { email: string; code: string; remember: boolean }
+
+const sendOtpInputSchema = z
+  .object({ email: z.unknown().optional() })
+  .superRefine((value, ctx) => {
+    const email = typeof value.email === 'string' ? value.email.trim() : ''
+    if (!email) {
+      ctx.addIssue({ code: 'custom', message: 'Email is required.' })
+      return
+    }
+    if (!emailSchema.safeParse(email).success) {
+      ctx.addIssue({ code: 'custom', message: 'Email must be valid.' })
+    }
+  })
+  .transform<SendOtpInput>((value) => ({ email: (value.email as string).trim().toLowerCase() }))
+
+const verifyOtpInputSchema = z
+  .object({
+    email: z.unknown().optional(),
+    code: z.unknown().optional(),
+    remember: z.unknown().optional(),
+  })
+  .superRefine((value, ctx) => {
+    const email = typeof value.email === 'string' ? value.email.trim() : ''
+    const code = typeof value.code === 'string' ? value.code.trim() : ''
+    if (!email) {
+      ctx.addIssue({ code: 'custom', message: 'Email is required.' })
+      return
+    }
+    if (!emailSchema.safeParse(email).success) {
+      ctx.addIssue({ code: 'custom', message: 'Email must be valid.' })
+    }
+    if (!code || !/^\d{6}$/.test(code)) {
+      ctx.addIssue({ code: 'custom', message: 'Code must be a 6-digit number.' })
+    }
+  })
+  .transform<VerifyOtpInput>((value) => ({
+    email: (value.email as string).trim().toLowerCase(),
+    code: (value.code as string).trim(),
+    remember: value.remember === true,
+  }))
+
+export function parseSendOtpInput(input: unknown): SendOtpInput {
+  const result = sendOtpInputSchema.safeParse(input)
+  if (!result.success) {
+    throw new InvalidAuthInputError(result.error.issues[0]?.message ?? 'OTP input is invalid.')
+  }
+  return result.data
+}
+
+export function parseVerifyOtpInput(input: unknown): VerifyOtpInput {
+  const result = verifyOtpInputSchema.safeParse(input)
+  if (!result.success) {
+    throw new InvalidAuthInputError(result.error.issues[0]?.message ?? 'OTP input is invalid.')
+  }
+  return result.data
+}
