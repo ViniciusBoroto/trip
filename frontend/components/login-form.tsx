@@ -141,6 +141,21 @@ export function LoginForm() {
           <span>{status.kind === "loading" ? "Sending..." : "Log in"}</span>
           <IconArrowRight size={18} stroke={2} />
         </AuthButton>
+
+        <div className="position-relative text-center my-4">
+          <hr className="border-[oklch(0.87_0.013_240)]" />
+          <span className="position-absolute top-50 start-50 translate-middle bg-white px-3 text-[oklch(0.48_0.02_245)] text-sm">
+            or
+          </span>
+        </div>
+
+        <Link
+          href="/login-otp"
+          className="btn w-100 h-12 inline-flex items-center justify-center gap-3 rounded-[0.875rem] border-2 border-dashed border-[oklch(0.58_0.19_256_/_0.3)] bg-transparent text-[oklch(0.58_0.19_256)] font-semibold no-underline hover:bg-[oklch(0.58_0.19_256_/_0.06)] hover:border-[oklch(0.58_0.19_256_/_0.5)] transition-all"
+        >
+          <IconMail size={18} stroke={2} />
+          <span>Sign in with a one-time code</span>
+        </Link>
       </form>
 
       <AuthStatus kind={status.kind} message={status.message} />

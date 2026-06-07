@@ -48,8 +48,9 @@ export function TripCard({ trip, onDelete }: TripCardProps) {
   return (
     <div className="card card-link card-stacked shadow-sm h-100 d-flex flex-column transition-all duration-200 hover:-translate-y-1 hover:shadow-md">
       {/* Cover Photo */}
-      <div
-        className="card-img-top img-responsive"
+      <Link
+        href={`/trips/${trip.id}`}
+        className="card-img-top img-responsive d-block"
         style={{
           height: "140px",
           backgroundImage: hasPhoto
@@ -59,6 +60,7 @@ export function TripCard({ trip, onDelete }: TripCardProps) {
           backgroundPosition: "center",
           position: "relative",
         }}
+        aria-label={`View ${trip.name}`}
       >
         <div
           style={{
@@ -71,7 +73,7 @@ export function TripCard({ trip, onDelete }: TripCardProps) {
         >
           {getCategoryBadge(trip.category)}
         </div>
-      </div>
+      </Link>
 
       <div className="card-body d-flex flex-column flex-grow-1 p-3">
         <h3 className="card-title h3 mb-2 text-truncate">

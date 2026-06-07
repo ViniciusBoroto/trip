@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState, startTransition } from "react";
+import { useEffect, useState, startTransition } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -28,6 +28,7 @@ export default function TripDetailPage() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -102,20 +103,21 @@ export default function TripDetailPage() {
           };
         });
       } else {
-        alert(res?.message || "Failed to remove itinerary item.");
+        setError(res?.message || "Failed to remove itinerary item.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error removing item.";
-      alert(msg);
+      setError(msg);
     }
   }
 
   async function handleDeleteTrip() {
     if (!trip) return;
-    if (!confirm("Are you sure you want to delete this entire trip? This action cannot be undone.")) {
-      return;
-    }
+    setConfirmingDelete(true);
+  }
 
+  async function confirmDeleteTrip() {
+    if (!trip) return;
     try {
       const res = await deleteTrip(trip.id);
       if (res?.ok) {
@@ -123,11 +125,13 @@ export default function TripDetailPage() {
           router.replace("/");
         });
       } else {
-        alert(res?.message || "Failed to delete trip.");
+        setError(res?.message || "Failed to delete trip.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error deleting trip.";
-      alert(msg);
+      setError(msg);
+    } finally {
+      setConfirmingDelete(false);
     }
   }
 
@@ -265,17 +269,44 @@ export default function TripDetailPage() {
               <div className="card shadow-sm border-0 bg-danger-lt">
                 <div className="card-body p-3">
                   <h3 className="card-title h4 mb-2 text-danger">Danger Zone</h3>
-                  <p className="text-danger-emphasis small mb-3">
-                    Once deleted, a trip and its itinerary scheduled items cannot be restored.
-                  </p>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-danger w-100 d-inline-flex align-items-center justify-content-center gap-1"
-                    onClick={handleDeleteTrip}
-                  >
-                    <IconTrash size={14} />
-                    <span>Delete Trip</span>
-                  </button>
+                  {confirmingDelete ? (
+                    <>
+                      <p className="text-danger-emphasis small mb-3">
+                        Are you sure? This action cannot be undone.
+                      </p>
+                      <div className="d-flex gap-2">
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-secondary w-100"
+                          onClick={() => setConfirmingDelete(false)}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-danger w-100 d-inline-flex align-items-center justify-content-center gap-1"
+                          onClick={confirmDeleteTrip}
+                        >
+                          <IconTrash size={14} />
+                          <span>Delete</span>
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-danger-emphasis small mb-3">
+                        Once deleted, a trip and its itinerary scheduled items cannot be restored.
+                      </p>
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-danger w-100 d-inline-flex align-items-center justify-content-center gap-1"
+                        onClick={handleDeleteTrip}
+                      >
+                        <IconTrash size={14} />
+                        <span>Delete Trip</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

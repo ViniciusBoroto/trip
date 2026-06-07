@@ -113,7 +113,7 @@ export function AuthLayout({ kicker, title, description, footnote, children }: A
             <span className="inline-flex items-center justify-center w-9 h-9 rounded-[0.875rem] bg-[oklch(0.58_0.19_256)] text-white shadow-[0_8px_24px_oklch(0.58_0.19_256_/_0.22)]" aria-hidden="true">
               <IconMapPin size={18} stroke={2.25} />
             </span>
-            <span>Trip</span>
+            <span className="d-none d-sm-inline">Trip</span>
           </Link>
         </div>
 

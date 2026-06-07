@@ -98,11 +98,11 @@ export default function Home() {
       if (res?.ok) {
         setTrips((prev) => prev.filter((t) => t.id !== id));
       } else {
-        alert(res?.message || "Failed to delete trip.");
+        setErrorTrips(res?.message || "Failed to delete trip.");
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error deleting trip.";
-      alert(msg);
+      setErrorTrips(msg);
     }
   }
 
@@ -137,11 +137,8 @@ export default function Home() {
             </span>
             <div>
               <h1 className="h3 mb-0 font-weight-bold" style={{ letterSpacing: "-0.02em" }}>
-                TripIt
+                Trip
               </h1>
-              <span className="text-secondary small d-none d-sm-inline">
-                Your personal travel planner
-              </span>
             </div>
           </div>
 
