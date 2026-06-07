@@ -2,13 +2,14 @@
 
 import { useState, useEffect, type FormEvent } from "react";
 import { IconPlus } from "@tabler/icons-react";
-import type { CreateItineraryItemRequest } from "@/types/trip";
+import type { CreateItineraryItemRequest, ItineraryItem } from "@/types/trip";
 
 type ItineraryItemFormProps = {
   minDate: string;
   maxDate: string;
   onSubmit: (data: CreateItineraryItemRequest) => Promise<void>;
   compact?: boolean;
+  item?: ItineraryItem;
 };
 
 const ITINERARY_TYPES = [
@@ -20,16 +21,17 @@ const ITINERARY_TYPES = [
   { value: "other", label: "Other / Note" },
 ];
 
-export function ItineraryItemForm({ minDate, maxDate, onSubmit, compact }: ItineraryItemFormProps) {
-  const [name, setName] = useState("");
-  const [date, setDate] = useState("");
-  const [type, setType] = useState("activity");
+export function ItineraryItemForm({ minDate, maxDate, onSubmit, compact, item }: ItineraryItemFormProps) {
+  const isEdit = !!item;
+  const [name, setName] = useState(item?.name ?? "");
+  const [date, setDate] = useState(item?.date ?? "");
+  const [type, setType] = useState(item?.type ?? "activity");
 
   useEffect(() => {
-    if (minDate && !date) {
+    if (minDate && !date && !item) {
       setDate(`${minDate}T12:00`);
     }
-  }, [minDate, date]);
+  }, [minDate, date, item]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,9 +58,11 @@ export function ItineraryItemForm({ minDate, maxDate, onSubmit, compact }: Itine
         type,
       });
 
-      setName("");
-      setDate(minDate ? `${minDate}T12:00` : "");
-      setType("activity");
+      if (!isEdit) {
+        setName("");
+        setDate(minDate ? `${minDate}T12:00` : "");
+        setType("activity");
+      }
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
@@ -138,7 +142,7 @@ export function ItineraryItemForm({ minDate, maxDate, onSubmit, compact }: Itine
             disabled={loading}
           >
             <IconPlus size={16} />
-            <span>{loading ? "Adding..." : "Add Item"}</span>
+            <span>{loading ? "Saving..." : isEdit ? "Save Changes" : "Add Item"}</span>
           </button>
         </div>
       </div>
@@ -152,7 +156,7 @@ export function ItineraryItemForm({ minDate, maxDate, onSubmit, compact }: Itine
   return (
     <div className="card shadow-sm border-0 bg-light-lt">
       <div className="card-body p-3">
-        <h4 className="card-title h4 mb-3">Add Itinerary Item</h4>
+        <h4 className="card-title h4 mb-3">{isEdit ? "Edit Itinerary Item" : "Add Itinerary Item"}</h4>
         {form}
       </div>
     </div>

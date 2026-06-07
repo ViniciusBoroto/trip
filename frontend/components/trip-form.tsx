@@ -2,11 +2,12 @@
 
 import { useState, type FormEvent } from "react";
 import { IconCalendar, IconPlus, IconX } from "@tabler/icons-react";
-import type { CreateTripRequest } from "@/types/trip";
+import type { CreateTripRequest, Trip } from "@/types/trip";
 
 type TripFormProps = {
   onSubmit: (data: CreateTripRequest) => Promise<void>;
   onClose: () => void;
+  trip?: Trip;
 };
 
 const CATEGORIES = [
@@ -19,18 +20,21 @@ const CATEGORIES = [
   { value: "other", label: "Other" },
 ];
 
-export function TripForm({ onSubmit, onClose }: TripFormProps) {
-  const [name, setName] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [photo, setPhoto] = useState("");
-  const [category, setCategory] = useState("other");
-  const [bookingReference, setBookingReference] = useState("");
-  const [description, setDescription] = useState("");
-  const [importantNotes, setImportantNotes] = useState("");
+export function TripForm({ onSubmit, onClose, trip }: TripFormProps) {
+  const isEdit = !!trip;
+  const [name, setName] = useState(trip?.name ?? "");
+  const [startDate, setStartDate] = useState(trip?.startDate ?? "");
+  const [endDate, setEndDate] = useState(trip?.endDate ?? "");
+  const [photo, setPhoto] = useState(trip?.photo ?? "");
+  const [category, setCategory] = useState(trip?.category ?? "other");
+  const [bookingReference, setBookingReference] = useState(trip?.bookingReference ?? "");
+  const [description, setDescription] = useState(trip?.description ?? "");
+  const [importantNotes, setImportantNotes] = useState(trip?.importantNotes ?? "");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const today = new Date().toISOString().split("T")[0];
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -52,7 +56,7 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
       setError("Start date must be before or equal to end date.");
       return;
     }
-    if (new Date(startDate) < new Date(new Date().toDateString())) {
+    if (!isEdit && new Date(startDate) < new Date(today)) {
       setError("Start date cannot be in the past.");
       return;
     }
@@ -71,21 +75,22 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
         importantNotes: importantNotes.trim() || null,
       });
 
-      // Reset form
-      setName("");
-      setStartDate("");
-      setEndDate("");
-      setPhoto("");
-      setCategory("other");
-      setBookingReference("");
-      setDescription("");
-      setImportantNotes("");
+      if (!isEdit) {
+        setName("");
+        setStartDate("");
+        setEndDate("");
+        setPhoto("");
+        setCategory("other");
+        setBookingReference("");
+        setDescription("");
+        setImportantNotes("");
+      }
       onClose();
     } catch (err: unknown) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("An error occurred while creating the trip.");
+        setError("An error occurred while saving the trip.");
       }
     } finally {
       setLoading(false);
@@ -95,7 +100,7 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
   return (
     <div className="card shadow mb-4">
       <div className="card-header d-flex align-items-center justify-content-between p-3">
-        <h3 className="card-title h3 mb-0">Plan a New Trip</h3>
+        <h3 className="card-title h3 mb-0">{isEdit ? "Edit Trip" : "Plan a New Trip"}</h3>
         <button
           type="button"
           className="btn btn-icon btn-sm btn-ghost-secondary"
@@ -139,7 +144,7 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
                 id="start-date"
                 type="date"
                 className="form-control form-control-sm"
-                min={new Date().toISOString().split("T")[0]}
+                min={isEdit ? undefined : today}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 disabled={loading}
@@ -154,7 +159,7 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
                 id="end-date"
                 type="date"
                 className="form-control form-control-sm"
-                min={new Date().toISOString().split("T")[0]}
+                min={isEdit ? undefined : today}
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 disabled={loading}
@@ -258,7 +263,7 @@ export function TripForm({ onSubmit, onClose }: TripFormProps) {
               disabled={loading}
             >
               <IconPlus size={14} />
-              <span>{loading ? "Creating..." : "Add Trip"}</span>
+              <span>{loading ? "Saving..." : isEdit ? "Save Changes" : "Add Trip"}</span>
             </button>
           </div>
         </form>

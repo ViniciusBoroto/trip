@@ -27,7 +27,7 @@ app.use('*', async (c, next) => {
   return cors({
     origin: allowedOrigin,
     credentials: true,
-    allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   })(c, next)
 })

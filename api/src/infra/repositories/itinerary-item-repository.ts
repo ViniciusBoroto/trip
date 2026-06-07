@@ -33,6 +33,10 @@ export class D1ItineraryItemRepository implements ItineraryItemRepository {
     })
   }
 
+  async update(id: string, data: Partial<ItineraryItem>): Promise<void> {
+    await this.db.update(itineraryItemsTable).set(data).where(eq(itineraryItemsTable.id, id))
+  }
+
   async delete(id: string): Promise<void> {
     await this.db.delete(itineraryItemsTable).where(eq(itineraryItemsTable.id, id))
   }

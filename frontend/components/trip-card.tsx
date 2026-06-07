@@ -6,15 +6,17 @@ import {
   IconBookmark,
   IconTrash,
   IconMapPin,
+  IconEdit,
 } from "@tabler/icons-react";
 import type { Trip } from "@/types/trip";
 
 type TripCardProps = {
   trip: Trip;
   onDelete: (id: string) => void;
+  onEdit: (trip: Trip) => void;
 };
 
-export function TripCard({ trip, onDelete }: TripCardProps) {
+export function TripCard({ trip, onDelete, onEdit }: TripCardProps) {
   const formatDate = (dateStr: string) => {
     try {
       const date = new Date(dateStr + "T00:00:00");
@@ -28,7 +30,6 @@ export function TripCard({ trip, onDelete }: TripCardProps) {
     }
   };
 
-  // Get nice category color/theme
   const getCategoryBadge = (category: string | null) => {
     if (!category) return null;
     const cat = category.toLowerCase();
@@ -77,9 +78,7 @@ export function TripCard({ trip, onDelete }: TripCardProps) {
 
       <div className="card-body d-flex flex-column flex-grow-1 p-3">
         <h3 className="card-title h3 mb-2 text-truncate">
-          <Link href={`/trips/${trip.id}`} className="text-reset text-decoration-none stretched-link">
-            {trip.name}
-          </Link>
+          {trip.name}
         </h3>
 
         <div className="text-muted small mb-2 d-flex align-items-center gap-1">
@@ -103,24 +102,38 @@ export function TripCard({ trip, onDelete }: TripCardProps) {
         )}
 
         <div className="d-flex align-items-center justify-content-between mt-auto pt-2 border-top">
-          <div className="d-inline-flex align-items-center gap-1 text-primary small font-weight-medium">
+          <Link
+            href={`/trips/${trip.id}`}
+            className="d-inline-flex align-items-center gap-1 text-primary small font-weight-medium no-underline"
+          >
             <IconMapPin size={14} />
             <span>Itinerary ({trip.itinerary?.length || 0})</span>
-          </div>
+          </Link>
 
-          <button
-            type="button"
-            className="btn btn-sm btn-icon btn-ghost-danger"
-            style={{ position: "relative", zIndex: 2 }}
-            aria-label="Delete Trip"
-            onClick={() => {
-              if (confirm("Are you sure you want to delete this trip and all its itinerary?")) {
-                onDelete(trip.id);
-              }
-            }}
-          >
-            <IconTrash size={16} />
-          </button>
+          <div className="d-flex gap-1">
+            <button
+              type="button"
+              className="btn btn-sm btn-icon btn-ghost-secondary"
+              style={{ position: "relative", zIndex: 2 }}
+              aria-label="Edit Trip"
+              onClick={() => onEdit(trip)}
+            >
+              <IconEdit size={16} />
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm btn-icon btn-ghost-danger"
+              style={{ position: "relative", zIndex: 2 }}
+              aria-label="Delete Trip"
+              onClick={() => {
+                if (confirm("Are you sure you want to delete this trip and all its itinerary?")) {
+                  onDelete(trip.id);
+                }
+              }}
+            >
+              <IconTrash size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

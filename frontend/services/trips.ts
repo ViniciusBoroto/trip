@@ -7,6 +7,10 @@ import type {
   GenericResponse,
   CreateTripRequest,
   CreateItineraryItemRequest,
+  UpdateTripRequest,
+  UpdateItineraryItemRequest,
+  UpdateTripResponse,
+  UpdateItineraryItemResponse,
   TripQuery,
 } from "@/types/trip";
 
@@ -34,6 +38,22 @@ export async function getTrip(tripId: string) {
 export async function createTrip(payload: CreateTripRequest) {
   const res = await authenticatedRequest<CreateTripResponse>("/trips", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return res;
+}
+
+export async function updateTrip(tripId: string, payload: UpdateTripRequest) {
+  const res = await authenticatedRequest<UpdateTripResponse>(`/trips/${tripId}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+  return res;
+}
+
+export async function updateItineraryItem(tripId: string, itemId: string, payload: UpdateItineraryItemRequest) {
+  const res = await authenticatedRequest<UpdateItineraryItemResponse>(`/trips/${tripId}/items/${itemId}`, {
+    method: "PUT",
     body: JSON.stringify(payload),
   });
   return res;

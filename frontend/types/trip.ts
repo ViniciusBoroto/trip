@@ -35,6 +35,10 @@ export type CreateItineraryItemRequest = {
   type: string;
 };
 
+export type UpdateTripRequest = Partial<CreateTripRequest>;
+
+export type UpdateItineraryItemRequest = Partial<CreateItineraryItemRequest>;
+
 export type TripQuery = {
   search?: string;
   category?: string;
@@ -64,6 +68,18 @@ export type CreateTripResponse = {
 };
 
 export type CreateItineraryItemResponse = {
+  ok: boolean;
+  item: ItineraryItem;
+  message?: string;
+};
+
+export type UpdateTripResponse = {
+  ok: boolean;
+  trip: Trip;
+  message?: string;
+};
+
+export type UpdateItineraryItemResponse = {
   ok: boolean;
   item: ItineraryItem;
   message?: string;

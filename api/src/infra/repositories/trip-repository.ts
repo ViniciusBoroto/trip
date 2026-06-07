@@ -68,6 +68,10 @@ export class D1TripRepository implements TripRepository {
     })
   }
 
+  async update(id: string, data: Partial<Trip>): Promise<void> {
+    await this.db.update(tripsTable).set(data).where(eq(tripsTable.id, id))
+  }
+
   async delete(id: string): Promise<void> {
     await this.db.delete(tripsTable).where(eq(tripsTable.id, id))
   }

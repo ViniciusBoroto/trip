@@ -1,81 +1,55 @@
 "use client";
 
 import {
+  IconCalendar,
+  IconClock,
   IconTrash,
-  IconPlaneDeparture,
+  IconEdit,
+  IconPlane,
   IconBed,
   IconToolsKitchen2,
-  IconTent,
+  IconRun,
   IconCar,
-  IconMapPin,
+  IconFileDescription,
 } from "@tabler/icons-react";
 import type { ItineraryItem } from "@/types/trip";
 
 type ItineraryListProps = {
   items: ItineraryItem[];
   onRemoveItem: (itemId: string) => void;
+  onEditItem: (item: ItineraryItem) => void;
 };
 
-// Map type to icon and text representation
-const TYPE_MAP: Record<
-  string,
-  { label: string; bg: string; icon: React.ComponentType<{ size?: number; className?: string }> }
-> = {
-  flight: { label: "Flight", bg: "bg-azure-lt", icon: IconPlaneDeparture },
-  hotel: { label: "Lodging", bg: "bg-purple-lt", icon: IconBed },
-  restaurant: { label: "Dining", bg: "bg-orange-lt", icon: IconToolsKitchen2 },
-  activity: { label: "Activity", bg: "bg-green-lt", icon: IconTent },
-  transport: { label: "Transport", bg: "bg-yellow-lt", icon: IconCar },
-  other: { label: "Other", bg: "bg-secondary-lt", icon: IconMapPin },
+const TYPE_ICONS: Record<string, typeof IconPlane> = {
+  flight: IconPlane,
+  hotel: IconBed,
+  restaurant: IconToolsKitchen2,
+  activity: IconRun,
+  transport: IconCar,
+  other: IconFileDescription,
 };
 
-export function ItineraryList({ items, onRemoveItem }: ItineraryListProps) {
-  const formatTime = (dateStr: string) => {
-    if (!dateStr.includes("T")) return null;
-    try {
-      const timeStr = dateStr.split("T")[1];
-      const [hoursStr, minutesStr] = timeStr.split(":");
-      const hours = parseInt(hoursStr, 10);
-      const minutes = parseInt(minutesStr, 10);
-      
-      const ampm = hours >= 12 ? "PM" : "AM";
-      const displayHours = hours % 12 || 12;
-      const displayMinutes = minutes < 10 ? `0${minutes}` : minutes;
-      
-      return `${displayHours}:${displayMinutes} ${ampm}`;
-    } catch {
-      return null;
-    }
-  };
-
-  if (!items || items.length === 0) {
+export function ItineraryList({ items, onRemoveItem, onEditItem }: ItineraryListProps) {
+  if (items.length === 0) {
     return (
-      <div className="text-center py-4 border rounded-3 bg-light-lt">
-        <p className="text-muted mb-0">No itinerary items scheduled yet.</p>
-        <p className="text-muted small mb-0">Use the form below to plan your days!</p>
+      <div className="text-center py-5 text-secondary small">
+        No itinerary items yet. Click "Add Item" to start planning.
       </div>
     );
   }
 
-  // Group items by date (extracting YYYY-MM-DD)
-  const groupedItems = items.reduce<Record<string, ItineraryItem[]>>((acc, item) => {
-    const dayKey = item.date.split("T")[0];
-    if (!acc[dayKey]) {
-      acc[dayKey] = [];
+  const grouped: Record<string, ItineraryItem[]> = {};
+  for (const item of items) {
+    const day = item.date.slice(0, 10);
+    if (!grouped[day]) {
+      grouped[day] = [];
     }
-    acc[dayKey].push(item);
-    return acc;
-  }, {});
+    grouped[day].push(item);
+  }
 
-  // Sort dates ascending
-  const sortedDates = Object.keys(groupedItems).sort();
+  const sortedDays = Object.keys(grouped).sort();
 
-  // Sort items within each day chronologically
-  Object.keys(groupedItems).forEach((dayKey) => {
-    groupedItems[dayKey].sort((a, b) => a.date.localeCompare(b.date));
-  });
-
-  const formatDateHeader = (dateStr: string) => {
+  const formatDay = (dateStr: string) => {
     try {
       const date = new Date(dateStr + "T00:00:00");
       return date.toLocaleDateString("en-US", {
@@ -89,54 +63,75 @@ export function ItineraryList({ items, onRemoveItem }: ItineraryListProps) {
     }
   };
 
+  const formatTime = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      {sortedDates.map((dateStr) => (
-        <div key={dateStr} className="card shadow-sm border-0">
-          <div className="card-header bg-light py-2 px-3">
-            <h4 className="card-title h4 mb-0 text-secondary-emphasis">
-              {formatDateHeader(dateStr)}
-            </h4>
-          </div>
+    <div className="timeline">
+      {sortedDays.map((day) => (
+        <div key={day} className="mb-4">
+          <h4 className="h5 mb-3 d-flex align-items-center gap-2">
+            <IconCalendar size={16} className="text-secondary" />
+            <span>{formatDay(day)}</span>
+          </h4>
 
-          <div className="list-group list-group-flush">
-            {groupedItems[dateStr].map((item) => {
-              const typeDetails = TYPE_MAP[item.type] || TYPE_MAP.other;
-              const IconComponent = typeDetails.icon;
-
-              return (
-                <div
-                  key={item.id}
-                  className="list-group-item d-flex align-items-center justify-content-between py-3 px-3"
-                >
-                  <div className="d-flex align-items-center gap-3">
-                    <span className={`badge ${typeDetails.bg} p-2 rounded-circle d-inline-flex align-items-center justify-content-center`} style={{ width: "32px", height: "32px" }}>
-                      <IconComponent size={16} />
+          <div className="d-flex flex-column gap-2">
+            {grouped[day].map((item, index) => (
+              <div
+                key={item.id}
+                className="card shadow-sm border-0"
+                style={{
+                  borderLeft: "4px solid var(--tblr-primary, oklch(0.58 0.19 256))",
+                }}
+              >
+                <div className="card-body p-3 d-flex align-items-start justify-content-between gap-2">
+                  <div className="d-flex align-items-start gap-3">
+                    <span className="text-secondary d-flex">
+                      {(() => {
+                        const Icon = TYPE_ICONS[item.type] || IconFileDescription;
+                        return <Icon size={20} stroke={1.5} />;
+                      })()}
                     </span>
                     <div>
-                      <div className="font-weight-medium text-dark-emphasis">{item.name}</div>
-                      <span className="text-secondary small text-capitalize" style={{ fontSize: "0.75rem" }}>
-                        {typeDetails.label}
-                        {formatTime(item.date) && ` • ${formatTime(item.date)}`}
-                      </span>
+                      <h5 className="card-title h6 mb-1">{item.name}</h5>
+                      <div className="d-flex align-items-center gap-1 text-secondary small">
+                        <IconClock size={12} />
+                        <span>{formatTime(item.date)}</span>
+                        <span className="badge bg-secondary-lt text-capitalize ms-1">{item.type}</span>
+                      </div>
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-icon btn-ghost-danger border-0"
-                    aria-label="Remove Itinerary Item"
-                    onClick={() => {
-                      if (confirm(`Remove "${item.name}" from your itinerary?`)) {
-                        onRemoveItem(item.id);
-                      }
-                    }}
-                  >
-                    <IconTrash size={16} />
-                  </button>
+                  <div className="d-flex gap-1 flex-shrink-0">
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-icon btn-ghost-secondary"
+                      aria-label={`Edit ${item.name}`}
+                      onClick={() => onEditItem(item)}
+                    >
+                      <IconEdit size={14} />
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-icon btn-ghost-danger"
+                      aria-label={`Remove ${item.name}`}
+                      onClick={() => onRemoveItem(item.id)}
+                    >
+                      <IconTrash size={14} />
+                    </button>
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         </div>
       ))}

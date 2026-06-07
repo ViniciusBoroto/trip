@@ -10,8 +10,8 @@ import { TripCard } from "@/components/trip-card";
 import { TripFilters } from "@/components/trip-filters";
 import { TripForm } from "@/components/trip-form";
 import { TripsPagination } from "@/components/trips-pagination";
-import { listTrips, createTrip, deleteTrip } from "@/services/trips";
-import type { Trip, CreateTripRequest } from "@/types/trip";
+import { listTrips, createTrip, updateTrip, deleteTrip } from "@/services/trips";
+import type { Trip, CreateTripRequest, UpdateTripRequest } from "@/types/trip";
 
 const PAGE_SIZE = 12;
 
@@ -29,6 +29,7 @@ export default function Home() {
   const [total, setTotal] = useState(0);
 
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingTrip, setEditingTrip] = useState<Trip | null>(null);
 
   const handleFilterChange = useCallback(
     (filters: { search: string; category: string }) => {
@@ -89,6 +90,19 @@ export default function Home() {
       );
     } else {
       throw new Error(res?.message || "Failed to create trip.");
+    }
+  }
+
+  async function handleEditTrip(data: CreateTripRequest) {
+    if (!editingTrip) return;
+    const res = await updateTrip(editingTrip.id, data as UpdateTripRequest);
+    if (res?.ok && res.trip) {
+      setTrips((prev) =>
+        prev.map((t) => (t.id === editingTrip.id ? res.trip : t)).sort((a, b) => a.startDate.localeCompare(b.startDate))
+      );
+      setEditingTrip(null);
+    } else {
+      throw new Error(res?.message || "Failed to update trip.");
     }
   }
 
@@ -182,10 +196,18 @@ export default function Home() {
             </div>
           </div>
 
-          {showAddForm && (
+          {(showAddForm || editingTrip) && (
             <div className="row justify-content-center mb-4">
               <div className="col-12 col-md-8 col-lg-6">
-                <TripForm onSubmit={handleCreateTrip} onClose={() => setShowAddForm(false)} />
+                <TripForm
+                  key={editingTrip?.id ?? "new"}
+                  trip={editingTrip ?? undefined}
+                  onSubmit={editingTrip ? handleEditTrip : handleCreateTrip}
+                  onClose={() => {
+                    setShowAddForm(false);
+                    setEditingTrip(null);
+                  }}
+                />
               </div>
             </div>
           )}
@@ -241,7 +263,7 @@ export default function Home() {
               <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
                 {trips.map((trip) => (
                   <div key={trip.id} className="col">
-                    <TripCard trip={trip} onDelete={handleDeleteTrip} />
+                    <TripCard trip={trip} onDelete={handleDeleteTrip} onEdit={setEditingTrip} />
                   </div>
                 ))}
               </div>

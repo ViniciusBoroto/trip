@@ -18,8 +18,8 @@ import { ApiClientError } from "@/lib/api/client";
 import { useAuth } from "@/components/auth-provider";
 import { ItineraryList } from "@/components/itinerary-list";
 import { ItineraryItemForm } from "@/components/itinerary-item-form";
-import { getTrip, deleteTrip, addItineraryItem, removeItineraryItem } from "@/services/trips";
-import type { Trip, CreateItineraryItemRequest } from "@/types/trip";
+import { getTrip, deleteTrip, addItineraryItem, updateItineraryItem, removeItineraryItem } from "@/services/trips";
+import type { Trip, ItineraryItem, CreateItineraryItemRequest, UpdateItineraryItemRequest } from "@/types/trip";
 
 export default function TripDetailPage() {
   const router = useRouter();
@@ -32,6 +32,7 @@ export default function TripDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState<ItineraryItem | null>(null);
 
   // Authentication check
   useEffect(() => {
@@ -90,6 +91,23 @@ export default function TripDetailPage() {
       });
     } else {
       throw new Error(res?.message || "Failed to add itinerary item.");
+    }
+  }
+
+  async function handleEditItineraryItem(data: CreateItineraryItemRequest) {
+    if (!trip || !editingItem) return;
+    const res = await updateItineraryItem(trip.id, editingItem.id, data as UpdateItineraryItemRequest);
+    if (res?.ok && res.item) {
+      setTrip((prev) => {
+        if (!prev) return null;
+        const nextItinerary = prev.itinerary
+          .map((item) => (item.id === editingItem.id ? res.item : item))
+          .sort((a, b) => a.date.localeCompare(b.date));
+        return { ...prev, itinerary: nextItinerary };
+      });
+      setEditingItem(null);
+    } else {
+      throw new Error(res?.message || "Failed to update itinerary item.");
     }
   }
 
@@ -284,7 +302,7 @@ export default function TripDetailPage() {
               </div>
 
               <div className="mb-4">
-                <ItineraryList items={trip.itinerary} onRemoveItem={handleRemoveItineraryItem} />
+                <ItineraryList items={trip.itinerary} onRemoveItem={handleRemoveItineraryItem} onEditItem={(item) => { setEditingItem(item); setShowModal(true); }} />
               </div>
             </div>
           </div>
@@ -341,12 +359,12 @@ export default function TripDetailPage() {
         </div>
       </main>
 
-      {/* Add Itinerary Item Modal */}
+      {/* Add / Edit Itinerary Item Modal */}
       {showModal && (
         <div
           className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
           style={{ zIndex: 9999, background: "rgba(0,0,0,0.5)" }}
-          onClick={() => setShowModal(false)}
+          onClick={() => { setShowModal(false); setEditingItem(null); }}
         >
           <div
             className="bg-white rounded-2xl shadow-lg p-4 w-100 mx-3"
@@ -354,23 +372,30 @@ export default function TripDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="d-flex align-items-center justify-content-between mb-3">
-              <h5 className="mb-0 text-[oklch(0.22_0.02_252)]">Add Itinerary Item</h5>
+              <h5 className="mb-0 text-[oklch(0.22_0.02_252)]">{editingItem ? "Edit Itinerary Item" : "Add Itinerary Item"}</h5>
               <button
                 type="button"
                 className="btn btn-sm border-0 text-[oklch(0.48_0.02_245)]"
-                onClick={() => setShowModal(false)}
+                onClick={() => { setShowModal(false); setEditingItem(null); }}
                 aria-label="Close"
               >
                 <IconX size={20} stroke={1.8} />
               </button>
             </div>
             <ItineraryItemForm
+              key={editingItem?.id ?? "new"}
               compact
+              item={editingItem ?? undefined}
               minDate={trip.startDate}
               maxDate={trip.endDate}
               onSubmit={async (data) => {
-                await handleAddItineraryItem(data);
+                if (editingItem) {
+                  await handleEditItineraryItem(data);
+                } else {
+                  await handleAddItineraryItem(data);
+                }
                 setShowModal(false);
+                setEditingItem(null);
               }}
             />
           </div>

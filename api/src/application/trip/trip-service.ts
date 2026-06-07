@@ -7,6 +7,8 @@ import type { PublicTrip, PublicItineraryItem, Trip, ItineraryItem } from '../..
 import {
   parseCreateTripInput,
   parseCreateItineraryItemInput,
+  parseUpdateTripInput,
+  parseUpdateItineraryItemInput,
 } from './trip-input'
 import type { ItineraryItemRepository, TripRepository, TripQuery } from './ports'
 
@@ -75,6 +77,35 @@ export class TripService {
     return mapToPublicTrip(trip, [])
   }
 
+  async updateTrip(userId: string, tripId: string, input: unknown): Promise<PublicTrip> {
+    const parsed = parseUpdateTripInput(input)
+
+    const trip = await this.deps.trips.findById(tripId)
+    if (!trip) {
+      throw new TripNotFoundError()
+    }
+
+    if (trip.userId !== userId) {
+      throw new TripAccessDeniedError()
+    }
+
+    const updateData: Partial<Trip> = {}
+    if (parsed.name !== undefined) updateData.name = parsed.name
+    if (parsed.startDate !== undefined) updateData.startDate = parsed.startDate
+    if (parsed.endDate !== undefined) updateData.endDate = parsed.endDate
+    if (parsed.photo !== undefined) updateData.photo = parsed.photo
+    if (parsed.category !== undefined) updateData.category = parsed.category
+    if (parsed.bookingReference !== undefined) updateData.bookingReference = parsed.bookingReference
+    if (parsed.description !== undefined) updateData.description = parsed.description
+    if (parsed.importantNotes !== undefined) updateData.importantNotes = parsed.importantNotes
+
+    await this.deps.trips.update(tripId, updateData)
+
+    const updatedTrip = await this.deps.trips.findById(tripId)
+    const items = await this.deps.itineraryItems.findAllByTrip(tripId)
+    return mapToPublicTrip(updatedTrip!, items)
+  }
+
   async deleteTrip(userId: string, tripId: string): Promise<void> {
     const trip = await this.deps.trips.findById(tripId)
     if (!trip) {
@@ -118,6 +149,39 @@ export class TripService {
 
     await this.deps.itineraryItems.create(item)
     return mapToPublicItineraryItem(item)
+  }
+
+  async updateItineraryItem(
+    userId: string,
+    tripId: string,
+    itemId: string,
+    input: unknown
+  ): Promise<PublicItineraryItem> {
+    const trip = await this.deps.trips.findById(tripId)
+    if (!trip) {
+      throw new TripNotFoundError()
+    }
+
+    if (trip.userId !== userId) {
+      throw new TripAccessDeniedError()
+    }
+
+    const item = await this.deps.itineraryItems.findById(itemId)
+    if (!item || item.tripId !== tripId) {
+      throw new ItineraryItemNotFoundError()
+    }
+
+    const parsed = parseUpdateItineraryItemInput(input)
+
+    const updateData: Partial<ItineraryItem> = {}
+    if (parsed.name !== undefined) updateData.name = parsed.name
+    if (parsed.date !== undefined) updateData.date = parsed.date
+    if (parsed.type !== undefined) updateData.type = parsed.type
+
+    await this.deps.itineraryItems.update(itemId, updateData)
+
+    const updatedItem = await this.deps.itineraryItems.findById(itemId)
+    return mapToPublicItineraryItem(updatedItem!)
   }
 
   async removeItineraryItem(

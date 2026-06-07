@@ -62,6 +62,19 @@ export function createTripRoutes(
     }
   })
 
+  // PUT /trips/:tripId - Update a trip
+  router.put('/:tripId', async (c) => {
+    try {
+      const claims = c.get('auth')
+      const tripId = c.req.param('tripId')
+      const body = await c.req.json().catch(() => null)
+      const trip = await getTripService(c.env).updateTrip(claims.sub, tripId, body)
+      return c.json({ ok: true, message: 'Trip updated.', trip })
+    } catch (error) {
+      return handleTripError(c, error)
+    }
+  })
+
   // DELETE /trips/:tripId - Delete a trip
   router.delete('/:tripId', async (c) => {
     try {
@@ -82,6 +95,20 @@ export function createTripRoutes(
       const body = await c.req.json().catch(() => null)
       const item = await getTripService(c.env).addItineraryItem(claims.sub, tripId, body)
       return c.json({ ok: true, message: 'Itinerary item added.', item }, 201)
+    } catch (error) {
+      return handleTripError(c, error)
+    }
+  })
+
+  // PUT /trips/:tripId/items/:itemId - Update itinerary item
+  router.put('/:tripId/items/:itemId', async (c) => {
+    try {
+      const claims = c.get('auth')
+      const tripId = c.req.param('tripId')
+      const itemId = c.req.param('itemId')
+      const body = await c.req.json().catch(() => null)
+      const item = await getTripService(c.env).updateItineraryItem(claims.sub, tripId, itemId, body)
+      return c.json({ ok: true, message: 'Itinerary item updated.', item })
     } catch (error) {
       return handleTripError(c, error)
     }
