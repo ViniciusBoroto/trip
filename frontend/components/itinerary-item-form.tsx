@@ -8,6 +8,7 @@ type ItineraryItemFormProps = {
   minDate: string;
   maxDate: string;
   onSubmit: (data: CreateItineraryItemRequest) => Promise<void>;
+  compact?: boolean;
 };
 
 const ITINERARY_TYPES = [
@@ -19,7 +20,7 @@ const ITINERARY_TYPES = [
   { value: "other", label: "Other / Note" },
 ];
 
-export function ItineraryItemForm({ minDate, maxDate, onSubmit }: ItineraryItemFormProps) {
+export function ItineraryItemForm({ minDate, maxDate, onSubmit, compact }: ItineraryItemFormProps) {
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
   const [type, setType] = useState("activity");
@@ -55,7 +56,6 @@ export function ItineraryItemForm({ minDate, maxDate, onSubmit }: ItineraryItemF
         type,
       });
 
-      // Reset form fields
       setName("");
       setDate(minDate ? `${minDate}T12:00` : "");
       setType("activity");
@@ -70,83 +70,90 @@ export function ItineraryItemForm({ minDate, maxDate, onSubmit }: ItineraryItemF
     }
   }
 
+  const form = (
+    <form onSubmit={handleSubmit}>
+      {error && (
+        <div className="alert alert-danger py-1 px-2 mb-3 small" role="alert">
+          {error}
+        </div>
+      )}
+
+      <div className="row g-2">
+        <div className="col-12">
+          <label htmlFor="item-name" className="form-label small mb-1">
+            Event / Item Name
+          </label>
+          <input
+            id="item-name"
+            type="text"
+            className="form-control"
+            placeholder="e.g., Dinner at Osteria, Flight to Rome"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={loading}
+            required
+          />
+        </div>
+
+        <div className="col-6">
+          <label htmlFor="item-date" className="form-label small mb-1">
+            Date & Time
+          </label>
+          <input
+            id="item-date"
+            type="datetime-local"
+            className="form-control"
+            min={minDate ? `${minDate}T00:00` : undefined}
+            max={maxDate ? `${maxDate}T23:59` : undefined}
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            disabled={loading}
+            required
+          />
+        </div>
+
+        <div className="col-6">
+          <label htmlFor="item-type" className="form-label small mb-1">
+            Type
+          </label>
+          <select
+            id="item-type"
+            className="form-select"
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            disabled={loading}
+          >
+            {ITINERARY_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-12 mt-3">
+          <button
+            type="submit"
+            className="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-1"
+            disabled={loading}
+          >
+            <IconPlus size={16} />
+            <span>{loading ? "Adding..." : "Add Item"}</span>
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+
+  if (compact) {
+    return form;
+  }
+
   return (
     <div className="card shadow-sm border-0 bg-light-lt">
       <div className="card-body p-3">
         <h4 className="card-title h4 mb-3">Add Itinerary Item</h4>
-
-        <form onSubmit={handleSubmit} className="row g-2 align-items-end">
-          {error && (
-            <div className="col-12">
-              <div className="alert alert-danger py-1 px-2 mb-2 small" role="alert">
-                {error}
-              </div>
-            </div>
-          )}
-
-          <div className="col-md-5 col-12">
-            <label htmlFor="item-name" className="form-label small mb-1">
-              Event / Item Name
-            </label>
-            <input
-              id="item-name"
-              type="text"
-              className="form-control form-control-sm"
-              placeholder="e.g., Dinner at Osteria, Flight to Rome"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
-
-          <div className="col-md-3 col-6">
-            <label htmlFor="item-date" className="form-label small mb-1">
-              Date & Time
-            </label>
-            <input
-              id="item-date"
-              type="datetime-local"
-              className="form-control form-control-sm"
-              min={minDate ? `${minDate}T00:00` : undefined}
-              max={maxDate ? `${maxDate}T23:59` : undefined}
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              disabled={loading}
-              required
-            />
-          </div>
-
-          <div className="col-md-2 col-6">
-            <label htmlFor="item-type" className="form-label small mb-1">
-              Type
-            </label>
-            <select
-              id="item-type"
-              className="form-select form-select-sm"
-              value={type}
-              onChange={(e) => setType(e.target.value)}
-              disabled={loading}
-            >
-              {ITINERARY_TYPES.map((t) => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="col-md-2 col-12 text-end">
-            <button
-              type="submit"
-              className="btn btn-sm btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-1"
-              disabled={loading}
-            >
-              <IconPlus size={14} />
-              <span>{loading ? "Adding..." : "Add"}</span>
-            </button>
-          </div>
-        </form>
+        {form}
       </div>
     </div>
   );

@@ -10,6 +10,8 @@ import {
   IconInfoCircle,
   IconFileText,
   IconTrash,
+  IconPlus,
+  IconX,
 } from "@tabler/icons-react";
 
 import { ApiClientError } from "@/lib/api/client";
@@ -29,6 +31,7 @@ export default function TripDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   // Authentication check
   useEffect(() => {
@@ -208,9 +211,8 @@ export default function TripDetailPage() {
         }}
       >
         <div className="position-absolute top-0 start-0 p-3">
-          <Link href="/" className="btn btn-sm btn-white shadow-sm d-inline-flex align-items-center gap-1">
+          <Link href="/" className="btn btn-sm btn-white shadow-sm d-inline-flex align-items-center" aria-label="Back to dashboard">
             <IconArrowLeft size={14} />
-            <span>Dashboard</span>
           </Link>
         </div>
 
@@ -265,7 +267,32 @@ export default function TripDetailPage() {
                   </div>
                 </div>
               )}
+            </div>
 
+            {/* Itinerary Timeline */}
+            <div className="col-12 col-md-8 order-md-1">
+              <div className="d-flex align-items-center justify-content-between mb-3">
+                <h3 className="h3 mb-0">Itinerary Timeline</h3>
+                <button
+                  type="button"
+                  className="btn btn-sm btn-primary d-inline-flex align-items-center gap-1"
+                  onClick={() => setShowModal(true)}
+                >
+                  <IconPlus size={14} />
+                  <span>Add Item</span>
+                </button>
+              </div>
+
+              <div className="mb-4">
+                <ItineraryList items={trip.itinerary} onRemoveItem={handleRemoveItineraryItem} />
+              </div>
+            </div>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="row mt-4">
+            <div className="col-12">
+              <hr className="mb-4" />
               <div className="card shadow-sm border-0 bg-danger-lt">
                 <div className="card-body p-3">
                   <h3 className="card-title h4 mb-2 text-danger">Danger Zone</h3>
@@ -277,14 +304,14 @@ export default function TripDetailPage() {
                       <div className="d-flex gap-2">
                         <button
                           type="button"
-                          className="btn btn-sm btn-outline-secondary w-100"
+                          className="btn btn-sm btn-outline-secondary"
                           onClick={() => setConfirmingDelete(false)}
                         >
                           Cancel
                         </button>
                         <button
                           type="button"
-                          className="btn btn-sm btn-danger w-100 d-inline-flex align-items-center justify-content-center gap-1"
+                          className="btn btn-sm btn-danger d-inline-flex align-items-center gap-1"
                           onClick={confirmDeleteTrip}
                         >
                           <IconTrash size={14} />
@@ -299,7 +326,7 @@ export default function TripDetailPage() {
                       </p>
                       <button
                         type="button"
-                        className="btn btn-sm btn-danger w-100 d-inline-flex align-items-center justify-content-center gap-1"
+                        className="btn btn-sm btn-danger d-inline-flex align-items-center gap-1"
                         onClick={handleDeleteTrip}
                       >
                         <IconTrash size={14} />
@@ -310,26 +337,45 @@ export default function TripDetailPage() {
                 </div>
               </div>
             </div>
-
-            {/* Itinerary Timeline */}
-            <div className="col-12 col-md-8 order-md-1">
-              <h3 className="h3 mb-3">Itinerary Timeline</h3>
-
-              <div className="mb-4">
-                <ItineraryList items={trip.itinerary} onRemoveItem={handleRemoveItineraryItem} />
-              </div>
-
-              <div className="mb-4">
-                <ItineraryItemForm
-                  minDate={trip.startDate}
-                  maxDate={trip.endDate}
-                  onSubmit={handleAddItineraryItem}
-                />
-              </div>
-            </div>
           </div>
         </div>
       </main>
+
+      {/* Add Itinerary Item Modal */}
+      {showModal && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ zIndex: 9999, background: "rgba(0,0,0,0.5)" }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-lg p-4 w-100 mx-3"
+            style={{ maxWidth: "540px" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <h5 className="mb-0 text-[oklch(0.22_0.02_252)]">Add Itinerary Item</h5>
+              <button
+                type="button"
+                className="btn btn-sm border-0 text-[oklch(0.48_0.02_245)]"
+                onClick={() => setShowModal(false)}
+                aria-label="Close"
+              >
+                <IconX size={20} stroke={1.8} />
+              </button>
+            </div>
+            <ItineraryItemForm
+              compact
+              minDate={trip.startDate}
+              maxDate={trip.endDate}
+              onSubmit={async (data) => {
+                await handleAddItineraryItem(data);
+                setShowModal(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
