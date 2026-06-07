@@ -8,7 +8,9 @@
     "REFRESH_TOKEN_PEPPER": "replace-me-with-a-different-long-random-secret",
     "JWT_ISSUER": "trip-api",
     "JWT_AUDIENCE": "trip-app",
-    "APP_ORIGIN": "http://localhost:3000"
+    "APP_ORIGIN": "http://localhost:3000",
+    "EMAIL_FROM": "youremail@email.com",
+    "RESEND_API_KEY": "yourapikey"
   },
   "d1_databases": [
     {

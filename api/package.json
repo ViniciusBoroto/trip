@@ -10,6 +10,7 @@
   "dependencies": {
     "drizzle-orm": "^0.44.2",
     "hono": "^4.12.23",
+    "resend": "^6.12.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -1,26 +1,20 @@
+import { Resend } from 'resend'
 import type { EmailSender } from '../../application/auth/ports'
 
-// Shape of the Cloudflare Email Service Workers send_email binding
-export interface EmailBinding {
-  send(message: {
-    to: string
-    from: { email: string; name?: string }
-    subject: string
-    text?: string
-    html?: string
-  }): Promise<void>
-}
+export class ResendEmailSender implements EmailSender {
+  private readonly resend: Resend
 
-export class CfEmailSender implements EmailSender {
   constructor(
-    private readonly emailBinding: EmailBinding,
+    apiKey: string,
     private readonly fromEmail: string,
-  ) {}
+  ) {
+    this.resend = new Resend(apiKey)
+  }
 
   async sendOtp(to: string, code: string): Promise<void> {
-    await this.emailBinding.send({
+    const { error } = await this.resend.emails.send({
+      from: this.fromEmail,
       to,
-      from: { email: this.fromEmail, name: 'Trip' },
       subject: 'Your sign-in code',
       text: `Your Trip sign-in code is: ${code}\n\nThis code expires in 10 minutes. If you did not request this, you can safely ignore this email.`,
       html: `
@@ -34,5 +28,9 @@ export class CfEmailSender implements EmailSender {
         </div>
       `,
     })
+
+    if (error) {
+      throw new Error(`Failed to send email via Resend: ${error.message}`)
+    }
   }
 }
